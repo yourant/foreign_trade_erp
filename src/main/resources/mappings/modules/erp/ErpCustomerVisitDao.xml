@@ -1,0 +1,282 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+        <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+        <mapper namespace="com.fy.erp.modules.erp.dao.ErpCustomerVisitDao">
+    
+	<sql id="erpCustomerVisitColumns">
+        		a.id AS "id",
+		a.follow_up_date AS "followUpDate",
+		a.production AS "production",
+		a.state_file AS "stateFile",
+		a.intention_date AS "intentionDate",
+		a.customer_level AS "customerLevel",
+		a.erp_customer_id AS "erpCustomer.id",
+		a.create_by AS "createBy.id",
+		a.create_date AS "createDate",
+		a.update_by AS "updateBy.id",
+		a.update_date AS "updateDate",
+		a.remarks AS "remarks",
+		a.del_flag AS "delFlag",
+		u8.name AS "createBy.name"
+	</sql>
+	
+	<sql id="erpCustomerVisitJoins">
+		LEFT JOIN sys_user u8 ON u8.id = a.create_by
+	</sql>
+    
+	<select id="get" resultType="ErpCustomerVisit">
+		SELECT 
+			<include refid="erpCustomerVisitColumns"/>
+		FROM erp_customer_visit a
+		<include refid="erpCustomerVisitJoins"/>
+		WHERE a.id = #{id}
+	</select>
+	
+	<select id="findList" resultType="ErpCustomerVisit">
+		SELECT 
+			<include refid="erpCustomerVisitColumns"/>
+		FROM erp_customer_visit a
+		<include refid="erpCustomerVisitJoins"/>
+		<where>
+			a.del_flag = #{DEL_FLAG_NORMAL}
+			<if test="followUpDate != null and followUpDate != ''">
+				AND a.follow_up_date = #{followUpDate}
+			</if>
+			<if test="production != null and production != ''">
+				AND a.production LIKE 
+					<if test="dbName == 'oracle'">'%'||#{production}||'%'</if>
+					<if test="dbName == 'mssql'">'%'+#{production}+'%'</if>
+					<if test="dbName == 'mysql'">concat('%',#{production},'%')</if>
+			</if>
+			<if test="stateFile != null and stateFile != ''">
+				AND a.state_file LIKE 
+					<if test="dbName == 'oracle'">'%'||#{stateFile}||'%'</if>
+					<if test="dbName == 'mssql'">'%'+#{stateFile}+'%'</if>
+					<if test="dbName == 'mysql'">concat('%',#{stateFile},'%')</if>
+			</if>
+			<if test="intentionDate != null and intentionDate != ''">
+				AND a.intention_date = #{intentionDate}
+			</if>
+			<if test="customerLevel != null and customerLevel != ''">
+				AND a.customer_level = #{customerLevel}
+			</if>
+			<if test="erpCustomer != null and erpCustomer.id != null and erpCustomer.id != ''">
+				AND a.erp_customer_id = #{erpCustomer.id}
+			</if>
+			<if test="createBy != null and createBy.id != null and createBy.id != ''">
+				AND a.create_by = #{createBy.id}
+			</if>
+			<if test="remarks != null and remarks != ''">
+				AND a.remarks LIKE 
+					<if test="dbName == 'oracle'">'%'||#{remarks}||'%'</if>
+					<if test="dbName == 'mssql'">'%'+#{remarks}+'%'</if>
+					<if test="dbName == 'mysql'">concat('%',#{remarks},'%')</if>
+			</if>
+			<if test="delFlag != null and delFlag != ''">
+				AND a.del_flag = #{delFlag}
+			</if>
+		</where>
+		<choose>
+			<when test="page !=null and page.orderBy != null and page.orderBy != ''">
+				ORDER BY ${page.orderBy}
+			</when>
+			<otherwise>
+				ORDER BY a.update_date DESC
+			</otherwise>
+		</choose>
+	</select>
+	
+	<select id="findAllList" resultType="ErpCustomerVisit">
+		SELECT 
+			<include refid="erpCustomerVisitColumns"/>
+		FROM erp_customer_visit a
+		<include refid="erpCustomerVisitJoins"/>
+		<where>
+			a.del_flag = #{DEL_FLAG_NORMAL}
+		</where>		
+		<choose>
+			<when test="page !=null and page.orderBy != null and page.orderBy != ''">
+				ORDER BY ${page.orderBy}
+			</when>
+			<otherwise>
+				ORDER BY a.update_date DESC
+			</otherwise>
+		</choose>
+	</select>
+
+
+    <insert id="insertSelective">
+        INSERT INTO erp_customer_visit
+        <trim prefix="(" suffix=")" suffixOverrides="," >
+                  <if test="id != null">
+                    id,
+                  </if>
+                  <if test="follow_up_date != null">
+                    follow_up_date,
+                  </if>
+                  <if test="production != null">
+                    production,
+                  </if>
+                  <if test="state_file != null">
+                    state_file,
+                  </if>
+                  <if test="intention_date != null">
+                    intention_date,
+                  </if>
+                  <if test="customer_level != null">
+                    customer_level,
+                  </if>
+                  <if test="erp_customer_id != null">
+                    erp_customer_id,
+                  </if>
+                  <if test="create_by != null">
+                    create_by,
+                  </if>
+                  <if test="create_date != null">
+                    create_date,
+                  </if>
+                  <if test="update_by != null">
+                    update_by,
+                  </if>
+                  <if test="update_date != null">
+                    update_date,
+                  </if>
+                  <if test="remarks != null">
+                    remarks,
+                  </if>
+                  <if test="del_flag != null">
+                    del_flag,
+                  </if>
+        </trim>
+        <trim prefix="VALUES (" suffix=")" suffixOverrides="," >
+                  <if test="id != null" >
+                    #{id},
+                  </if>
+                  <if test="followUpDate != null" >
+                    #{followUpDate},
+                  </if>
+                  <if test="production != null" >
+                    #{production},
+                  </if>
+                  <if test="stateFile != null" >
+                    #{stateFile},
+                  </if>
+                  <if test="intentionDate != null" >
+                    #{intentionDate},
+                  </if>
+                  <if test="customerLevel != null" >
+                    #{customerLevel},
+                  </if>
+                  <if test="erpCustomer.id != null" >
+                    #{erpCustomer.id},
+                  </if>
+                  <if test="createBy.id != null" >
+                    #{createBy.id},
+                  </if>
+                  <if test="createDate != null" >
+                    #{createDate},
+                  </if>
+                  <if test="updateBy.id != null" >
+                    #{updateBy.id},
+                  </if>
+                  <if test="updateDate != null" >
+                    #{updateDate},
+                  </if>
+                  <if test="remarks != null" >
+                    #{remarks},
+                  </if>
+                  <if test="delFlag != null" >
+                    #{delFlag},
+                  </if>
+        </trim>
+    </insert>
+
+     <update id="updateSelective">
+        UPDATE erp_customer_visit
+        <set>
+                          <if test="follow_up_date != null" >
+                                    follow_up_date = #{followUpDate},
+                          </if>
+                          <if test="production != null" >
+                                    production = #{production},
+                          </if>
+                          <if test="state_file != null" >
+                                    state_file = #{stateFile},
+                          </if>
+                          <if test="intention_date != null" >
+                                    intention_date = #{intentionDate},
+                          </if>
+                          <if test="customer_level != null" >
+                                    customer_level = #{customerLevel},
+                          </if>
+                          <if test="erp_customer_id != null" >
+                                    erp_customer_id = #{erpCustomer.id},
+                          </if>
+                          <if test="update_by != null" >
+                                    update_by = #{updateBy.id},
+                          </if>
+                          <if test="update_date != null" >
+                                    update_date = #{updateDate},
+                          </if>
+                          <if test="remarks != null" >
+                                    remarks = #{remarks},
+                          </if>
+        </set>
+        WHERE id = #{id}
+      </update>
+
+
+	<insert id="insert">
+		INSERT INTO erp_customer_visit(
+                        id,
+                follow_up_date,
+                production,
+                state_file,
+                intention_date,
+                customer_level,
+                erp_customer_id,
+                create_by,
+                create_date,
+                update_by,
+                update_date,
+                remarks,
+                del_flag
+		) VALUES (
+                        #{id},
+                #{followUpDate},
+                #{production},
+                #{stateFile},
+                #{intentionDate},
+                #{customerLevel},
+                #{erpCustomer.id},
+                #{createBy.id},
+                #{createDate},
+                #{updateBy.id},
+                #{updateDate},
+                #{remarks},
+                #{delFlag}
+		)
+	</insert>
+	
+	<update id="update">
+		UPDATE erp_customer_visit SET 	
+                        follow_up_date = #{followUpDate},
+                production = #{production},
+                state_file = #{stateFile},
+                intention_date = #{intentionDate},
+                customer_level = #{customerLevel},
+                erp_customer_id = #{erpCustomer.id},
+                update_by = #{updateBy.id},
+                update_date = #{updateDate},
+                remarks = #{remarks}
+		WHERE id = #{id}
+	</update>
+	
+	<update id="delete">
+		UPDATE erp_customer_visit SET 
+			del_flag = #{DEL_FLAG_DELETE}
+		WHERE id = #{id}
+	</update>
+
+	<!--  ======================================================================================== -->
+
+</mapper>

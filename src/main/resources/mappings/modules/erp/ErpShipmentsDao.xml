@@ -1,0 +1,524 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.fy.erp.modules.erp.dao.ErpShipmentsDao">
+
+    <sql id="erpShipmentsColumns">
+        a.id AS "id",
+        a.blno AS "blno",
+        a.notice_file AS "noticeFile",
+        a.enum_bill_type AS "enumBillType",
+        a.delivery_time AS "deliveryTime",
+        a.bill_manifest_no AS "billManifestNo",
+        a.bill_manifest_file AS "billManifestFile",
+        a.bill_lading_file AS "billLadingFile",
+        a.price_manifest_file AS "priceManifestFile",
+        a.send_time AS "sendTime",
+        a.pre_come_time AS "preComeTime",
+        a.enum_express_company AS "enumExpressCompany",
+        a.express_num AS "expressNum",
+        a.express_file AS "expressFile",
+        a.express_date AS "expressDate",
+        a.enum_shipments_type AS "enumShipmentsType",
+        a.status AS "status",
+        a.create_by AS "createBy.id",
+        a.create_date AS "createDate",
+        a.update_by AS "updateBy.id",
+        a.update_date AS "updateDate",
+        a.remarks AS "remarks",
+        a.del_flag AS "delFlag"
+    </sql>
+
+    <sql id="erpShipmentsJoins">
+        LEFT JOIN sys_user u17 ON u17.id = a.create_by
+        LEFT JOIN sys_user u19 ON u19.id = a.update_by
+    </sql>
+
+    <select id="get" resultType="ErpShipments">
+        SELECT
+        <include refid="erpShipmentsColumns"/>
+        FROM erp_shipments a
+        <include refid="erpShipmentsJoins"/>
+        WHERE a.id = #{id}
+    </select>
+
+    <select id="findList" resultType="ErpShipments">
+        SELECT
+        <include refid="erpShipmentsColumns"/>
+        FROM erp_shipments a
+        <include refid="erpShipmentsJoins"/>
+        <where>
+            a.del_flag = #{DEL_FLAG_NORMAL}
+            <if test="blno != null and blno != ''">
+                AND a.blno LIKE
+                <if test="dbName == 'oracle'">'%'||#{blno}||'%'</if>
+                <if test="dbName == 'mssql'">'%'+#{blno}+'%'</if>
+                <if test="dbName == 'mysql'">concat('%',#{blno},'%')</if>
+            </if>
+            <if test="enumBillType != null and enumBillType != ''">
+                AND a.enum_bill_type = #{enumBillType}
+            </if>
+            <if test="deliveryTime != null and deliveryTime != ''">
+                AND a.delivery_time = #{deliveryTime}
+            </if>
+            <if test="billManifestNo != null and billManifestNo != ''">
+                AND a.bill_manifest_no LIKE
+                <if test="dbName == 'oracle'">'%'||#{billManifestNo}||'%'</if>
+                <if test="dbName == 'mssql'">'%'+#{billManifestNo}+'%'</if>
+                <if test="dbName == 'mysql'">concat('%',#{billManifestNo},'%')</if>
+            </if>
+            <if test="sendTime != null and sendTime != ''">
+                AND a.send_time = #{sendTime}
+            </if>
+            <if test="preComeTime != null and preComeTime != ''">
+                AND a.pre_come_time = #{preComeTime}
+            </if>
+            <if test="enumExpressCompany != null and enumExpressCompany != ''">
+                AND a.enum_express_company = #{enumExpressCompany}
+            </if>
+            <if test="expressNum != null and expressNum != ''">
+                AND a.express_num LIKE
+                <if test="dbName == 'oracle'">'%'||#{expressNum}||'%'</if>
+                <if test="dbName == 'mssql'">'%'+#{expressNum}+'%'</if>
+                <if test="dbName == 'mysql'">concat('%',#{expressNum},'%')</if>
+            </if>
+            <if test="enumShipmentsType != null and enumShipmentsType != ''">
+                AND a.enum_shipments_type = #{enumShipmentsType}
+            </if>
+            <if test="status != null and status != ''">
+                AND a.status = #{status}
+            </if>
+            <if test="updateDate != null and updateDate != ''">
+                AND a.update_date = #{updateDate}
+            </if>
+            <if test="remarks != null and remarks != ''">
+                AND a.remarks LIKE
+                <if test="dbName == 'oracle'">'%'||#{remarks}||'%'</if>
+                <if test="dbName == 'mssql'">'%'+#{remarks}+'%'</if>
+                <if test="dbName == 'mysql'">concat('%',#{remarks},'%')</if>
+            </if>
+            <if test="delFlag != null and delFlag != ''">
+                AND a.del_flag = #{delFlag}
+            </if>
+        </where>
+        <choose>
+            <when test="page !=null and page.orderBy != null and page.orderBy != ''">
+                ORDER BY ${page.orderBy}
+            </when>
+            <otherwise>
+                ORDER BY a.update_date DESC
+            </otherwise>
+        </choose>
+    </select>
+
+    <select id="findAllList" resultType="ErpShipments">
+        SELECT
+        <include refid="erpShipmentsColumns"/>
+        FROM erp_shipments a
+        <include refid="erpShipmentsJoins"/>
+        <where>
+            a.del_flag = #{DEL_FLAG_NORMAL}
+        </where>
+        <choose>
+            <when test="page !=null and page.orderBy != null and page.orderBy != ''">
+                ORDER BY ${page.orderBy}
+            </when>
+            <otherwise>
+                ORDER BY a.update_date DESC
+            </otherwise>
+        </choose>
+    </select>
+
+
+    <insert id="insertSelective">
+        INSERT INTO erp_shipments
+        <trim prefix="(" suffix=")" suffixOverrides="," >
+            <if test="id != null">
+                id,
+            </if>
+            <if test="blno != null">
+                blno,
+            </if>
+            <if test="notice_file != null">
+                notice_file,
+            </if>
+            <if test="enum_bill_type != null">
+                enum_bill_type,
+            </if>
+            <if test="delivery_time != null">
+                delivery_time,
+            </if>
+            <if test="bill_manifest_no != null">
+                bill_manifest_no,
+            </if>
+            <if test="bill_manifest_file != null">
+                bill_manifest_file,
+            </if>
+            <if test="bill_lading_file != null">
+                bill_lading_file,
+            </if>
+            <if test="price_manifest_file != null">
+                price_manifest_file,
+            </if>
+            <if test="send_time != null">
+                send_time,
+            </if>
+            <if test="pre_come_time != null">
+                pre_come_time,
+            </if>
+            <if test="enum_express_company != null">
+                enum_express_company,
+            </if>
+            <if test="express_num != null">
+                express_num,
+            </if>
+            <if test="express_file != null">
+                express_file,
+            </if>
+            <if test="express_date != null">
+                express_date,
+            </if>
+            <if test="enum_shipments_type != null">
+                enum_shipments_type,
+            </if>
+            <if test="status != null">
+                status,
+            </if>
+            <if test="create_by != null">
+                create_by,
+            </if>
+            <if test="create_date != null">
+                create_date,
+            </if>
+            <if test="update_by != null">
+                update_by,
+            </if>
+            <if test="update_date != null">
+                update_date,
+            </if>
+            <if test="remarks != null">
+                remarks,
+            </if>
+            <if test="del_flag != null">
+                del_flag,
+            </if>
+        </trim>
+        <trim prefix="VALUES (" suffix=")" suffixOverrides="," >
+            <if test="id != null" >
+                #{id},
+            </if>
+            <if test="blno != null" >
+                #{blno},
+            </if>
+            <if test="noticeFile != null" >
+                #{noticeFile},
+            </if>
+            <if test="enumBillType != null" >
+                #{enumBillType},
+            </if>
+            <if test="deliveryTime != null" >
+                #{deliveryTime},
+            </if>
+            <if test="billManifestNo != null" >
+                #{billManifestNo},
+            </if>
+            <if test="billManifestFile != null" >
+                #{billManifestFile},
+            </if>
+            <if test="billLadingFile != null" >
+                #{billLadingFile},
+            </if>
+            <if test="priceManifestFile != null" >
+                #{priceManifestFile},
+            </if>
+            <if test="sendTime != null" >
+                #{sendTime},
+            </if>
+            <if test="preComeTime != null" >
+                #{preComeTime},
+            </if>
+            <if test="enumExpressCompany != null" >
+                #{enumExpressCompany},
+            </if>
+            <if test="expressNum != null" >
+                #{expressNum},
+            </if>
+            <if test="expressFile != null" >
+                #{expressFile},
+            </if>
+            <if test="expressDate != null" >
+                #{expressDate},
+            </if>
+            <if test="enumShipmentsType != null" >
+                #{enumShipmentsType},
+            </if>
+            <if test="status != null" >
+                #{status},
+            </if>
+            <if test="createBy.id != null" >
+                #{createBy.id},
+            </if>
+            <if test="createDate != null" >
+                #{createDate},
+            </if>
+            <if test="updateBy.id != null" >
+                #{updateBy.id},
+            </if>
+            <if test="updateDate != null" >
+                #{updateDate},
+            </if>
+            <if test="remarks != null" >
+                #{remarks},
+            </if>
+            <if test="delFlag != null" >
+                #{delFlag},
+            </if>
+        </trim>
+    </insert>
+
+    <select id="selectSalesOrderShipments" resultType="ErpSalesOrderShipments">
+        SELECT
+        id,
+        erp_sales_order_id,
+        erp_shipments_id,
+        create_by,
+        create_date,
+        update_by,
+        update_date,
+        remarks,
+        del_flag
+        FROM erp_sales_order_shipments
+        <where>
+            1 = 1
+            <if test="id != null and id != ''">
+                AND id = #{id}
+            </if>
+            <if test="erpSalesOrderId != null and erpSalesOrderId != ''">
+                AND erp_sales_order_id = #{erpSalesOrderId}
+            </if>
+            <if test="erpShipmentsId != null and erpShipmentsId != ''">
+                AND erp_shipments_id = #{erpShipmentsId}
+            </if>
+            <if test="updateDate != null and updateDate != ''">
+                AND update_date = #{updateDate}
+            </if>
+            <if test="remarks != null and remarks != ''">
+                AND remarks LIKE
+                <if test="dbName == 'oracle'">'%'||#{remarks}||'%'</if>
+                <if test="dbName == 'mssql'">'%'+#{remarks}+'%'</if>
+                <if test="dbName == 'mysql'">concat('%',#{remarks},'%')</if>
+            </if>
+            <if test="delFlag != null and delFlag != ''">
+                AND del_flag = #{delFlag}
+            </if>
+        </where>
+    </select>
+
+    <insert id="insertSalesOrderShipments">
+        INSERT INTO erp_sales_order_shipments(
+            id,
+            erp_sales_order_id,
+            erp_shipments_id,
+            create_by,
+            create_date,
+            update_by,
+            update_date,
+            remarks,
+            del_flag
+        ) VALUES (
+            #{id},
+            #{erpSalesOrderId},
+            #{erpShipmentsId},
+            #{createBy.id},
+            #{createDate},
+            #{updateBy.id},
+            #{updateDate},
+            #{remarks},
+            #{delFlag}
+        )
+    </insert>
+
+    <update id="updateSalesOrderShipments">
+        UPDATE erp_sales_order_shipments
+        <set>
+            <if test="erpSalesOrderId != null" >
+                erp_sales_order_id = #{erpSalesOrderId},
+            </if>
+            <if test="erpShipmentsId != null" >
+                erp_shipments_id = #{erpShipmentsId},
+            </if>
+            <if test="createBy != null" >
+                create_by = #{createBy.id},
+            </if>
+            <if test="createDate != null" >
+                create_date = #{createDate},
+            </if>
+            <if test="updateBy != null" >
+                update_by = #{updateBy.id},
+            </if>
+            <if test="updateDate != null" >
+                update_date = #{updateDate},
+            </if>
+            <if test="remarks != null" >
+                remarks = #{remarks},
+            </if>
+            <if test="delFlag != null" >
+                del_flag = #{delFlag},
+            </if>
+        </set>
+        WHERE id = #{id}
+    </update>
+
+    <update id="updateSelective">
+        UPDATE erp_shipments
+        <set>
+            <if test="blno != null" >
+                blno = #{blno},
+            </if>
+            <if test="notice_file != null" >
+                notice_file = #{noticeFile},
+            </if>
+            <if test="enum_bill_type != null" >
+                enum_bill_type = #{enumBillType},
+            </if>
+            <if test="delivery_time != null" >
+                delivery_time = #{deliveryTime},
+            </if>
+            <if test="bill_manifest_no != null" >
+                bill_manifest_no = #{billManifestNo},
+            </if>
+            <if test="bill_manifest_file != null" >
+                bill_manifest_file = #{billManifestFile},
+            </if>
+            <if test="bill_lading_file != null" >
+                bill_lading_file = #{billLadingFile},
+            </if>
+            <if test="price_manifest_file != null" >
+                price_manifest_file = #{priceManifestFile},
+            </if>
+            <if test="send_time != null" >
+                send_time = #{sendTime},
+            </if>
+            <if test="pre_come_time != null" >
+                pre_come_time = #{preComeTime},
+            </if>
+            <if test="enum_express_company != null" >
+                enum_express_company = #{enumExpressCompany},
+            </if>
+            <if test="express_num != null" >
+                express_num = #{expressNum},
+            </if>
+            <if test="express_file != null" >
+                express_file = #{expressFile},
+            </if>
+            <if test="express_date != null" >
+                express_date = #{expressDate},
+            </if>
+            <if test="enum_shipments_type != null" >
+                enum_shipments_type = #{enumShipmentsType},
+            </if>
+            <if test="status != null" >
+                status = #{status},
+            </if>
+            <if test="remarks != null" >
+                remarks = #{remarks},
+            </if>
+        </set>
+        WHERE id = #{id}
+    </update>
+
+
+    <insert id="insert">
+        INSERT INTO erp_shipments(
+            id,
+            blno,
+            notice_file,
+            enum_bill_type,
+            delivery_time,
+            bill_manifest_no,
+            bill_manifest_file,
+            bill_lading_file,
+            price_manifest_file,
+            send_time,
+            pre_come_time,
+            enum_express_company,
+            express_num,
+            express_file,
+            express_date,
+            enum_shipments_type,
+            status,
+            create_by,
+            create_date,
+            update_by,
+            update_date,
+            remarks,
+            <if test="erpRepairOrder != null and erpRepairOrder.id !=null and erpRepairOrder.id != ''" >
+                erp_repair_order_id,
+            </if>
+            <if test="erpPartsOrder != null and erpPartsOrder.id !=null and erpPartsOrder.id != ''" >
+                erp_parts_order_id,
+            </if>
+            del_flag
+        ) VALUES (
+            #{id},
+            #{blno},
+            #{noticeFile},
+            #{enumBillType},
+            #{deliveryTime},
+            #{billManifestNo},
+            #{billManifestFile},
+            #{billLadingFile},
+            #{priceManifestFile},
+            #{sendTime},
+            #{preComeTime},
+            #{enumExpressCompany},
+            #{expressNum},
+            #{expressFile},
+            #{expressDate},
+            #{enumShipmentsType},
+            #{status},
+            #{createBy.id},
+            #{createDate},
+            #{updateBy.id},
+            #{updateDate},
+            #{remarks},
+            <if test="erpRepairOrder != null and erpRepairOrder.id !=null and erpRepairOrder.id != ''" >
+                #{erpRepairOrder.id},
+            </if>
+            <if test="erpPartsOrder != null and erpPartsOrder.id !=null and erpPartsOrder.id != ''" >
+                #{erpPartsOrder.id},
+            </if>
+            #{delFlag}
+        )
+    </insert>
+
+    <update id="update">
+        UPDATE erp_shipments SET
+            blno = #{blno},
+            notice_file = #{noticeFile},
+            enum_bill_type = #{enumBillType},
+            delivery_time = #{deliveryTime},
+            bill_manifest_no = #{billManifestNo},
+            bill_manifest_file = #{billManifestFile},
+            bill_lading_file = #{billLadingFile},
+            price_manifest_file = #{priceManifestFile},
+            send_time = #{sendTime},
+            pre_come_time = #{preComeTime},
+            enum_express_company = #{enumExpressCompany},
+            express_num = #{expressNum},
+            express_file = #{expressFile},
+            express_date = #{expressDate},
+            enum_shipments_type = #{enumShipmentsType},
+            status = #{status},
+            remarks = #{remarks}
+        WHERE id = #{id}
+    </update>
+
+    <update id="delete">
+        UPDATE erp_shipments SET
+            del_flag = #{DEL_FLAG_DELETE}
+        WHERE id = #{id}
+    </update>
+
+    <!--  ======================================================================================== -->
+
+</mapper>

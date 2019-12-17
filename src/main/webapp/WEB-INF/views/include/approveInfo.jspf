@@ -1,0 +1,43 @@
+<%@ page contentType="text/html;charset=UTF-8" %>
+<c:choose>
+    <c:when test="${erpSalesOrder.act.flag == 0}">
+        <fieldset>
+            <legend>审批信息</legend>
+            <div class="control-group">
+                <label class="control-label">审批意见：</label>
+                <div class="controls">
+							<pre>
+                                    ${erpSalesOrder.act.comment}
+                            </pre>
+                </div>
+            </div>
+            <div class="control-group">
+                <label class="control-label">审批结果：</label>
+                <div class="controls">
+                    驳回
+                </div>
+            </div>
+        </fieldset>
+    </c:when>
+</c:choose>
+<c:choose>
+    <c:when test="${erpRepairOrder.act.flag == 0}">
+        <fieldset>
+            <legend>审批信息</legend>
+            <div class="control-group">
+                <label class="control-label">审批意见：</label>
+                <div class="controls">
+							<pre>
+                                    ${erpRepairOrder.act.comment}
+                            </pre>
+                </div>
+            </div>
+            <div class="control-group">
+                <label class="control-label">审批结果：</label>
+                <div class="controls">
+                    驳回
+                </div>
+            </div>
+        </fieldset>
+    </c:when>
+</c:choose>

@@ -1,0 +1,261 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+        <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+        <mapper namespace="com.fy.erp.modules.erp.dao.ErpVinDao">
+    
+	<sql id="erpVinColumns">
+        		a.id AS "id",
+		a.erp_docker_id AS "erpDocker.id",
+		a.erp_production_items_id AS "erpProductionItems.id",
+		a.vin_no AS "vinNo",
+		a.engine_no AS "engineNo",
+		a.productor AS "productor",
+		a.create_by AS "createBy.id",
+		a.create_date AS "createDate",
+		a.update_by AS "updateBy.id",
+		a.update_date AS "updateDate",
+		a.remarks AS "remarks",
+		a.del_flag AS "delFlag"
+	</sql>
+	
+	<sql id="erpVinJoins">
+		LEFT JOIN sys_user u7 ON u7.id = a.create_by
+		LEFT JOIN sys_user u9 ON u9.id = a.update_by
+	</sql>
+    
+	<select id="get" resultType="ErpVin">
+		SELECT 
+			<include refid="erpVinColumns"/>
+		FROM erp_vin a
+		<include refid="erpVinJoins"/>
+		WHERE a.id = #{id}
+	</select>
+	
+	<select id="findList" resultType="ErpVin">
+		SELECT 
+			<include refid="erpVinColumns"/>
+		FROM erp_vin a
+		<include refid="erpVinJoins"/>
+		<where>
+			a.del_flag = #{DEL_FLAG_NORMAL}
+			<if test="erpDocker != null and erpDocker.id != null and erpDocker.id != ''">
+				AND a.erp_docker_id = #{erpDocker.id}
+			</if>
+			<if test="erpProductionItems != null and erpProductionItems.id != null and erpProductionItems.id != ''">
+				AND a.erp_production_items_id = #{erpProductionItems.id}
+			</if>
+			<if test="vinNo != null and vinNo != ''">
+				AND a.vin_no LIKE 
+					<if test="dbName == 'oracle'">'%'||#{vinNo}||'%'</if>
+					<if test="dbName == 'mssql'">'%'+#{vinNo}+'%'</if>
+					<if test="dbName == 'mysql'">concat('%',#{vinNo},'%')</if>
+			</if>
+			<if test="engineNo != null and engineNo != ''">
+				AND a.engine_no LIKE 
+					<if test="dbName == 'oracle'">'%'||#{engineNo}||'%'</if>
+					<if test="dbName == 'mssql'">'%'+#{engineNo}+'%'</if>
+					<if test="dbName == 'mysql'">concat('%',#{engineNo},'%')</if>
+			</if>
+			<if test="productor != null and productor != ''">
+				AND a.productor LIKE 
+					<if test="dbName == 'oracle'">'%'||#{productor}||'%'</if>
+					<if test="dbName == 'mssql'">'%'+#{productor}+'%'</if>
+					<if test="dbName == 'mysql'">concat('%',#{productor},'%')</if>
+			</if>
+			<if test="updateDate != null and updateDate != ''">
+				AND a.update_date = #{updateDate}
+			</if>
+			<if test="remarks != null and remarks != ''">
+				AND a.remarks LIKE 
+					<if test="dbName == 'oracle'">'%'||#{remarks}||'%'</if>
+					<if test="dbName == 'mssql'">'%'+#{remarks}+'%'</if>
+					<if test="dbName == 'mysql'">concat('%',#{remarks},'%')</if>
+			</if>
+			<if test="delFlag != null and delFlag != ''">
+				AND a.del_flag = #{delFlag}
+			</if>
+		</where>
+		<choose>
+			<when test="page !=null and page.orderBy != null and page.orderBy != ''">
+				ORDER BY ${page.orderBy}
+			</when>
+			<otherwise>
+				ORDER BY a.update_date DESC
+			</otherwise>
+		</choose>
+	</select>
+	
+	<select id="findAllList" resultType="ErpVin">
+		SELECT 
+			<include refid="erpVinColumns"/>
+		FROM erp_vin a
+		<include refid="erpVinJoins"/>
+		<where>
+			a.del_flag = #{DEL_FLAG_NORMAL}
+		</where>		
+		<choose>
+			<when test="page !=null and page.orderBy != null and page.orderBy != ''">
+				ORDER BY ${page.orderBy}
+			</when>
+			<otherwise>
+				ORDER BY a.update_date DESC
+			</otherwise>
+		</choose>
+	</select>
+
+
+    <insert id="insertSelective">
+        INSERT INTO erp_vin
+        <trim prefix="(" suffix=")" suffixOverrides="," >
+                  <if test="id != null">
+                    id,
+                  </if>
+                  <if test="erp_docker_id != null">
+                    erp_docker_id,
+                  </if>
+                  <if test="erp_production_items_id != null">
+                    erp_production_items_id,
+                  </if>
+                  <if test="vin_no != null">
+                    vin_no,
+                  </if>
+                  <if test="engine_no != null">
+                    engine_no,
+                  </if>
+                  <if test="productor != null">
+                    productor,
+                  </if>
+                  <if test="create_by != null">
+                    create_by,
+                  </if>
+                  <if test="create_date != null">
+                    create_date,
+                  </if>
+                  <if test="update_by != null">
+                    update_by,
+                  </if>
+                  <if test="update_date != null">
+                    update_date,
+                  </if>
+                  <if test="remarks != null">
+                    remarks,
+                  </if>
+                  <if test="del_flag != null">
+                    del_flag,
+                  </if>
+        </trim>
+        <trim prefix="VALUES (" suffix=")" suffixOverrides="," >
+                  <if test="id != null" >
+                    #{id},
+                  </if>
+                  <if test="erpDocker.id != null" >
+                    #{erpDocker.id},
+                  </if>
+                  <if test="erpProductionItems.id != null" >
+                    #{erpProductionItems.id},
+                  </if>
+                  <if test="vinNo != null" >
+                    #{vinNo},
+                  </if>
+                  <if test="engineNo != null" >
+                    #{engineNo},
+                  </if>
+                  <if test="productor != null" >
+                    #{productor},
+                  </if>
+                  <if test="createBy.id != null" >
+                    #{createBy.id},
+                  </if>
+                  <if test="createDate != null" >
+                    #{createDate},
+                  </if>
+                  <if test="updateBy.id != null" >
+                    #{updateBy.id},
+                  </if>
+                  <if test="updateDate != null" >
+                    #{updateDate},
+                  </if>
+                  <if test="remarks != null" >
+                    #{remarks},
+                  </if>
+                  <if test="delFlag != null" >
+                    #{delFlag},
+                  </if>
+        </trim>
+    </insert>
+
+     <update id="updateSelective">
+        UPDATE erp_vin
+        <set>
+                          <if test="erp_docker_id != null" >
+                                    erp_docker_id = #{erpDocker.id},
+                          </if>
+                          <if test="erp_production_items_id != null" >
+                                    erp_production_items_id = #{erpProductionItems.id},
+                          </if>
+                          <if test="vin_no != null" >
+                                    vin_no = #{vinNo},
+                          </if>
+                          <if test="engine_no != null" >
+                                    engine_no = #{engineNo},
+                          </if>
+                          <if test="productor != null" >
+                                    productor = #{productor},
+                          </if>
+                          <if test="remarks != null" >
+                                    remarks = #{remarks},
+                          </if>
+        </set>
+        WHERE id = #{id}
+      </update>
+
+
+	<insert id="insert">
+		INSERT INTO erp_vin(
+                        id,
+                erp_docker_id,
+                erp_production_items_id,
+                vin_no,
+                engine_no,
+                productor,
+                create_by,
+                create_date,
+                update_by,
+                update_date,
+                remarks,
+                del_flag
+		) VALUES (
+                        #{id},
+                #{erpDocker.id},
+                #{erpProductionItems.id},
+                #{vinNo},
+                #{engineNo},
+                #{productor},
+                #{createBy.id},
+                #{createDate},
+                #{updateBy.id},
+                #{updateDate},
+                #{remarks},
+                #{delFlag}
+		)
+	</insert>
+	
+	<update id="update">
+		UPDATE erp_vin SET 	
+                        erp_docker_id = #{erpDocker.id},
+                erp_production_items_id = #{erpProductionItems.id},
+                vin_no = #{vinNo},
+                engine_no = #{engineNo},
+                productor = #{productor},
+                remarks = #{remarks}
+		WHERE id = #{id}
+	</update>
+	
+	<update id="delete">
+		UPDATE erp_vin SET 
+			del_flag = #{DEL_FLAG_DELETE}
+		WHERE id = #{id}
+	</update>
+
+	<!--  ======================================================================================== -->
+
+</mapper>

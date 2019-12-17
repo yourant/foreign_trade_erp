@@ -1,0 +1,202 @@
+<?xml version="1.0" encoding="utf-8"?>
+<template>
+	<name>viewForm</name>
+	<filePath>src/main/webapp/WEB-INF/views/${lastPackageName}/${moduleName}/${subModuleName}</filePath>
+	<fileName>${className}View.jsp</fileName>
+	<content><![CDATA[
+<%@ page contentType="text/html;charset=UTF-8" %>
+<%@ include file="/WEB-INF/views/include/taglib.jsp"%>
+<html>
+<head>
+	<title>${functionNameSimple}管理</title>
+	<meta name="decorator" content="default"/>
+	<script type="text/javascript">
+		$(document).ready(function() {
+			//$("#name").focus();
+			$("#inputForm").validate({
+				submitHandler: function(form){
+					loading('正在提交，请稍等...');
+					form.submit();
+				},
+				errorContainer: "#messageBox",
+				errorPlacement: function(error, element) {
+					$("#messageBox").text("输入有误，请先更正。");
+					if (element.is(":checkbox")||element.is(":radio")||element.parent().is(".input-append")){
+						error.appendTo(element.parent().parent());
+					} else {
+						error.insertAfter(element);
+					}
+				}
+			});
+		});
+	<#list table.childList as c>
+		function addRow(list, idx, tpl, row){
+			$(list).append(Mustache.render(tpl, {
+				idx: idx, delBtn: true, row: row
+			}));
+			$(list+idx).find("select").each(function(){
+				$(this).val($(this).attr("data-value"));
+			});
+			$(list+idx).find("input[type='checkbox'], input[type='radio']").each(function(){
+				var ss = $(this).attr("data-value").split(',');
+				for (var i=0; i<ss.length; i++){
+					if($(this).val() == ss[i]){
+						$(this).attr("checked","checked");
+					}
+				}
+			});
+		}
+		function delRow(obj, prefix){
+			var id = $(prefix+"_id");
+			var delFlag = $(prefix+"_delFlag");
+			if (id.val() == ""){
+				$(obj).parent().parent().remove();
+			}else if(delFlag.val() == "0"){
+				delFlag.val("1");
+				$(obj).html("&divide;").attr("title", "撤销删除");
+				$(obj).parent().parent().addClass("error");
+			}else if(delFlag.val() == "1"){
+				delFlag.val("0");
+				$(obj).html("&times;").attr("title", "删除");
+				$(obj).parent().parent().removeClass("error");
+			}
+		}
+		<#break/>
+	</#list>
+	</script>
+</head>
+<body>
+	<ul class="nav nav-tabs my-nav-tabs">
+		<li><a href="${r"${ctx}"}/${urlPrefix}/">${functionNameSimple}列表</a></li>
+		<li class="active"><a href="${r"${ctx}"}/${urlPrefix}/form?id=${"${"+className+".id}"}">${functionNameSimple}<shiro:hasPermission name="${permissionPrefix}:edit">${r"${not empty "+className+".id?(isForEdit?'修改':'查看'):'添加'}"}</shiro:hasPermission><shiro:lacksPermission name="${permissionPrefix}:edit">查看</shiro:lacksPermission></a></li>
+	</ul><br/>
+	<div class="my-container">
+        <form:form id="inputForm" modelAttribute="${className}" action="${r"${ctx}"}/${urlPrefix}/save" method="post" class="form-horizontal">
+            <form:hidden path="id"/>
+            <sys:message content="${r"${message}"}"/>
+            <#list table.columnList as c>
+                <#if c.isEdit?? && c.isEdit == "1" && (c.isNotBaseField || c.simpleJavaField == 'remarks')>
+            <div class="control-group">
+                <label class="control-label">${c.comments}：</label>
+                <div class="controls">
+                <#if c.showType == "input">
+                    ${r"${"}${className}.${c.javaFieldId}${r"}"}
+                <#elseif c.showType == "textarea">
+                    <pre>
+                    ${r"${"}${className}.${c.javaFieldId}${r"}"}
+                    </pre>
+                <#elseif c.showType == "select">
+                    <form:select path="${c.javaFieldId}" class="input-xlarge <#if c.isNull != "1">required</#if>"  readonly="true" disabled="true">
+                        <form:option value="" label=""/>
+                        <form:options items="${"$"}{fns:getDictList('${c.dictType}')}" itemLabel="label" itemValue="value" htmlEscape="false"/>
+                    </form:select>
+                <#elseif c.showType == "checkbox">
+                    <form:checkboxes path="${c.javaFieldId}" items="${"$"}{fns:getDictList('${c.dictType}')}" itemLabel="label" itemValue="value" htmlEscape="false" class="<#if c.isNull != "1">required</#if>" readonly="true" disabled="true"/>
+                <#elseif c.showType == "radiobox">
+                    <form:radiobuttons path="${c.javaFieldId}" items="${"$"}{fns:getDictList('${c.dictType}')}" itemLabel="label" itemValue="value" htmlEscape="false" class="<#if c.isNull != "1">required</#if>" readonly="true" disabled="true"/>
+                <#elseif c.showType == "dateselect">
+                    <fmt:formatDate value="${r"${"}${className}.${c.javaFieldId}${r"}"}" pattern="yyyy-MM-dd" />
+                <#elseif c.showType == "userselect">
+                    ${r"${"}${className}.${c.simpleJavaField}${r"}"}
+                <#elseif c.showType == "officeselect">
+                    ${r"${"}${className}.${c.simpleJavaField}${r"}"}
+                <#elseif c.showType == "areaselect">
+                    ${r"${"}${className}.${c.simpleJavaField}${r"}"}
+                <#elseif c.showType == "fileselect">
+                    <form:hidden id="${c.simpleJavaField}" path="${c.javaFieldId}" htmlEscape="false"<#if c.dataLength != "0"> maxlength="${c.dataLength}"</#if> class="input-xlarge"/>
+                    <sys:ckfinder input="${c.simpleJavaField}" type="files" uploadPath="/${moduleName}<#if subModuleName != "">/${subModuleName}</#if>/${className}" selectMultiple="true"   readonly="true"/>
+                </#if>
+                </div>
+            </div>
+                </#if>
+            </#list>
+            <#list table.childList as child>
+                <div class="control-group">
+                    <label class="control-label">${child.comments}：</label>
+                    <div class="controls">
+                        <table id="contentTable" class="table table-striped table-bordered table-condensed">
+                            <thead>
+                                <tr>
+                                    <th class="hide"></th>
+                                    <#assign childColumnCount = 0 /><#list child.columnList as c>
+                                        <#if c.isEdit?? && c.isEdit == "1" && (c.isNotBaseField || c.simpleJavaField == 'remarks') && c.name != c.genTable.parentTableFk>
+                                    <th>${c.comments}</th><#assign childColumnCount = childColumnCount + 1 />
+                                        </#if>
+                                    </#list>
+                                    <shiro:hasPermission name="${permissionPrefix}:edit"><th width="10">&nbsp;</th></shiro:hasPermission>
+                                </tr>
+                            </thead>
+                            <tbody id="${child.className?uncap_first}List">
+                            </tbody>
+                        </table>
+                        <script type="text/template" id="${child.className?uncap_first}Tpl">//<!--
+                            <tr id="${child.className?uncap_first}List{{idx}}">
+                                <td class="hide">
+                                    <input id="${child.className?uncap_first}List{{idx}}_id" name="${child.className?uncap_first}List[{{idx}}].id" type="hidden" value="{{row.id}}"/>
+                                    <input id="${child.className?uncap_first}List{{idx}}_delFlag" name="${child.className?uncap_first}List[{{idx}}].delFlag" type="hidden" value="0"/>
+                                </td>
+                                <#list child.columnList as c>
+                                    <#if c.isEdit?? && c.isEdit == "1" && (c.isNotBaseField || c.simpleJavaField == 'remarks') && c.name != c.genTable.parentTableFk>
+                                <td>
+                                <#if c.showType == "input">
+                                {{row.${c.javaFieldId}}}
+                                <#elseif c.showType == "textarea">
+                                {{row.${c.javaFieldId}}}
+                                <#elseif c.showType == "select">
+                                    <select id="${child.className?uncap_first}List{{idx}}_${c.simpleJavaField}" name="${child.className?uncap_first}List[{{idx}}].${c.javaFieldId}" data-value="{{row.${c.javaFieldId}}}" class="input-small <#if c.isNull != "1">required</#if>" readonly="true" disabled="true">
+                                        <option value=""></option>
+                                        <c:forEach items="${"$"}{fns:getDictList('${c.dictType}')}" var="dict">
+                                            <option value="${"$"}{dict.value}">${"$"}{dict.label}</option>
+                                        </c:forEach>
+                                    </select>
+                                <#elseif c.showType == "checkbox">
+                                    <c:forEach items="${"$"}{fns:getDictList('${c.dictType}')}" var="dict" varStatus="dictStatus" ~only="true">
+                                        <span><input id="${child.className?uncap_first}List{{idx}}_${c.simpleJavaField}${"$"}{dictStatus.index}" name="${child.className?uncap_first}List[{{idx}}].${c.javaFieldId}" type="checkbox" value="${"$"}{dict.value}" data-value="{{row.${c.javaFieldId}}}" readonly="true"><label for="${child.className?uncap_first}List{{idx}}_${c.simpleJavaField}${"$"}{dictStatus.index}">${"$"}{dict.label}</label></span>
+                                    </c:forEach>
+                                <#elseif c.showType == "radiobox">
+                                    <c:forEach items="${"$"}{fns:getDictList('${c.dictType}')}" var="dict" varStatus="dictStatus">
+                                        <span><input id="${child.className?uncap_first}List{{idx}}_${c.simpleJavaField}${"$"}{dictStatus.index}" name="${child.className?uncap_first}List[{{idx}}].${c.javaFieldId}" type="radio" value="${"$"}{dict.value}" data-value="{{row.${c.javaFieldId}}}" readonly="true"><label for="${child.className?uncap_first}List{{idx}}_${c.simpleJavaField}${"$"}{dictStatus.index}">${"$"}{dict.label}</label></span>
+                                    </c:forEach>
+                                <#elseif c.showType == "dateselect">
+                                    <input id="${child.className?uncap_first}List{{idx}}_${c.simpleJavaField}" name="${child.className?uncap_first}List[{{idx}}].${c.javaFieldId}" type="text" readonly="readonly" maxlength="20" class="input-medium Wdate <#if c.isNull != "1">required</#if>"
+                                        value="{{row.${c.javaFieldId}}}" onclick="WdatePicker({dateFmt:'yyyy-MM-dd HH:mm:ss',isShowClear:false});" readonly="true"/>
+                                <#elseif c.showType == "userselect">
+                                    <sys:treeselect id="${child.className?uncap_first}List{{idx}}_${c.simpleJavaField}" name="${child.className?uncap_first}List[{{idx}}].${c.javaFieldId}" value="{{row.${c.javaFieldId}}}" labelName="${child.className?uncap_first}List{{idx}}.${c.javaFieldName}" labelValue="{{row.${c.javaFieldName}}}"
+                                        title="用户" url="/sys/office/treeData?type=3" cssClass="<#if c.isNull != "1">required</#if>" allowClear="true" notAllowSelectParent="true" disabled="true"/>
+                                <#elseif c.showType == "officeselect">
+                                    <sys:treeselect id="${child.className?uncap_first}List{{idx}}_${c.simpleJavaField}" name="${child.className?uncap_first}List[{{idx}}].${c.javaFieldId}" value="{{row.${c.javaFieldId}}}" labelName="${child.className?uncap_first}List{{idx}}.${c.javaFieldName}" labelValue="{{row.${c.javaFieldName}}}"
+                                        title="部门" url="/sys/office/treeData?type=2" cssClass="<#if c.isNull != "1">required</#if>" allowClear="true" notAllowSelectParent="true" disabled="true"/>
+                                <#elseif c.showType == "areaselect">
+                                    <sys:treeselect id="${child.className?uncap_first}List{{idx}}_${c.simpleJavaField}" name="${child.className?uncap_first}List[{{idx}}].${c.javaFieldId}" value="{{row.${c.javaFieldId}}}" labelName="${child.className?uncap_first}List{{idx}}.${c.javaFieldName}" labelValue="{{row.${c.javaFieldName}}}"
+                                        title="区域" url="/sys/area/treeData" cssClass="<#if c.isNull != "1">required</#if>" allowClear="true" notAllowSelectParent="true" disabled="true"/>
+                                <#elseif c.showType == "fileselect">
+                                    <input id="${child.className?uncap_first}List{{idx}}_${c.simpleJavaField}" name="${child.className?uncap_first}List[{{idx}}].${c.simpleJavaField}" type="hidden" value="{{row.${c.javaFieldId}}}"<#if c.dataLength != "0"> maxlength="${c.dataLength}"</#if>/>
+                                    <sys:ckfinder input="${child.className?uncap_first}List{{idx}}_${c.simpleJavaField}" type="files" uploadPath="/${moduleName}<#if subModuleName != "">/${subModuleName}</#if>/${className}" selectMultiple="true" readonly="true"/>
+                                </#if>
+                                </td>
+                                    </#if>
+                                </#list>
+                            </tr>//-->
+                        </script>
+                        <script type="text/javascript">
+                            var ${child.className?uncap_first}RowIdx = 0, ${child.className?uncap_first}Tpl = $("#${child.className?uncap_first}Tpl").html().replace(/(\/\/\<!\-\-)|(\/\/\-\->)/g,"");
+                            $(document).ready(function() {
+                                var data = ${"$"}{fns:toJson(${className}.${child.className?uncap_first}List)};
+                                for (var i=0; i<data.length; i++){
+                                    addRow('#${child.className?uncap_first}List', ${child.className?uncap_first}RowIdx, ${child.className?uncap_first}Tpl, data[i]);
+                                    ${child.className?uncap_first}RowIdx = ${child.className?uncap_first}RowIdx + 1;
+                                }
+                            });
+                        </script>
+                    </div>
+                </div>
+            </#list>
+            <div class="form-actions my-form-actions">
+                <input id="btnCancel" class="btn hide" type="button" value="返 回" onclick="history.go(-1)"/>
+            </div>
+        </form:form>
+    </div>
+</body>
+</html>]]>
+	</content>
+</template>

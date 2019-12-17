@@ -1,0 +1,250 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+        <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+        <mapper namespace="com.fy.erp.modules.erp.dao.ErpDockerDao">
+    
+	<sql id="erpDockerColumns">
+        		a.id AS "id",
+		a.erp_shipments_id AS "erpShipments.id",
+		a.docker_no AS "dockerNo",
+		a.seal_no AS "sealNo",
+		a.parts AS "parts",
+		a.create_by AS "createBy.id",
+		a.create_date AS "createDate",
+		a.update_by AS "updateBy.id",
+		a.update_date AS "updateDate",
+		a.remarks AS "remarks",
+		a.del_flag AS "delFlag"
+	</sql>
+	
+	<sql id="erpDockerJoins">
+		LEFT JOIN sys_user u6 ON u6.id = a.create_by
+		LEFT JOIN sys_user u8 ON u8.id = a.update_by
+	</sql>
+    
+	<select id="get" resultType="ErpDocker">
+		SELECT 
+			<include refid="erpDockerColumns"/>
+		FROM erp_docker a
+		<include refid="erpDockerJoins"/>
+		WHERE a.id = #{id}
+	</select>
+	
+	<select id="findList" resultType="ErpDocker">
+		SELECT 
+			<include refid="erpDockerColumns"/>
+		FROM erp_docker a
+		<include refid="erpDockerJoins"/>
+		<where>
+			a.del_flag = #{DEL_FLAG_NORMAL}
+			<if test="erpShipments != null and erpShipments.id != null and erpShipments.id != ''">
+				AND a.erp_shipments_id = #{erpShipments.id}
+			</if>
+			<if test="dockerNo != null and dockerNo != ''">
+				AND a.docker_no LIKE 
+					<if test="dbName == 'oracle'">'%'||#{dockerNo}||'%'</if>
+					<if test="dbName == 'mssql'">'%'+#{dockerNo}+'%'</if>
+					<if test="dbName == 'mysql'">concat('%',#{dockerNo},'%')</if>
+			</if>
+			<if test="sealNo != null and sealNo != ''">
+				AND a.seal_no LIKE 
+					<if test="dbName == 'oracle'">'%'||#{sealNo}||'%'</if>
+					<if test="dbName == 'mssql'">'%'+#{sealNo}+'%'</if>
+					<if test="dbName == 'mysql'">concat('%',#{sealNo},'%')</if>
+			</if>
+			<if test="parts != null and parts != ''">
+				AND a.parts LIKE 
+					<if test="dbName == 'oracle'">'%'||#{parts}||'%'</if>
+					<if test="dbName == 'mssql'">'%'+#{parts}+'%'</if>
+					<if test="dbName == 'mysql'">concat('%',#{parts},'%')</if>
+			</if>
+			<if test="updateDate != null and updateDate != ''">
+				AND a.update_date = #{updateDate}
+			</if>
+			<if test="remarks != null and remarks != ''">
+				AND a.remarks LIKE 
+					<if test="dbName == 'oracle'">'%'||#{remarks}||'%'</if>
+					<if test="dbName == 'mssql'">'%'+#{remarks}+'%'</if>
+					<if test="dbName == 'mysql'">concat('%',#{remarks},'%')</if>
+			</if>
+		</where>
+		<choose>
+			<when test="page !=null and page.orderBy != null and page.orderBy != ''">
+				ORDER BY ${page.orderBy}
+			</when>
+			<otherwise>
+				ORDER BY a.update_date DESC
+			</otherwise>
+		</choose>
+	</select>
+	
+	<select id="findAllList" resultType="ErpDocker">
+		SELECT 
+			<include refid="erpDockerColumns"/>
+		FROM erp_docker a
+		<include refid="erpDockerJoins"/>
+		<where>
+			a.del_flag = #{DEL_FLAG_NORMAL}
+		</where>		
+		<choose>
+			<when test="page !=null and page.orderBy != null and page.orderBy != ''">
+				ORDER BY ${page.orderBy}
+			</when>
+			<otherwise>
+				ORDER BY a.update_date DESC
+			</otherwise>
+		</choose>
+	</select>
+
+
+    <insert id="insertSelective">
+        INSERT INTO erp_docker
+        <trim prefix="(" suffix=")" suffixOverrides="," >
+                  <if test="id != null">
+                    id,
+                  </if>
+                  <if test="erp_shipments_id != null">
+                    erp_shipments_id,
+                  </if>
+                  <if test="docker_no != null">
+                    docker_no,
+                  </if>
+                  <if test="seal_no != null">
+                    seal_no,
+                  </if>
+                  <if test="parts != null">
+                    parts,
+                  </if>
+                  <if test="create_by != null">
+                    create_by,
+                  </if>
+                  <if test="create_date != null">
+                    create_date,
+                  </if>
+                  <if test="update_by != null">
+                    update_by,
+                  </if>
+                  <if test="update_date != null">
+                    update_date,
+                  </if>
+                  <if test="remarks != null">
+                    remarks,
+                  </if>
+                  <if test="del_flag != null">
+                    del_flag,
+                  </if>
+        </trim>
+        <trim prefix="VALUES (" suffix=")" suffixOverrides="," >
+                  <if test="id != null" >
+                    #{id},
+                  </if>
+                  <if test="erpShipments.id != null" >
+                    #{erpShipments.id},
+                  </if>
+                  <if test="dockerNo != null" >
+                    #{dockerNo},
+                  </if>
+                  <if test="sealNo != null" >
+                    #{sealNo},
+                  </if>
+                  <if test="parts != null" >
+                    #{parts},
+                  </if>
+                  <if test="createBy.id != null" >
+                    #{createBy.id},
+                  </if>
+                  <if test="createDate != null" >
+                    #{createDate},
+                  </if>
+                  <if test="updateBy.id != null" >
+                    #{updateBy.id},
+                  </if>
+                  <if test="updateDate != null" >
+                    #{updateDate},
+                  </if>
+                  <if test="remarks != null" >
+                    #{remarks},
+                  </if>
+                  <if test="delFlag != null" >
+                    #{delFlag},
+                  </if>
+        </trim>
+    </insert>
+
+     <update id="updateSelective">
+        UPDATE erp_docker
+        <set>
+                          <if test="erp_shipments_id != null" >
+                                    erp_shipments_id = #{erpShipments.id},
+                          </if>
+                          <if test="docker_no != null" >
+                                    docker_no = #{dockerNo},
+                          </if>
+                          <if test="seal_no != null" >
+                                    seal_no = #{sealNo},
+                          </if>
+                          <if test="parts != null" >
+                                    parts = #{parts},
+                          </if>
+                          <if test="update_by != null" >
+                                    update_by = #{updateBy.id},
+                          </if>
+                          <if test="update_date != null" >
+                                    update_date = #{updateDate},
+                          </if>
+                          <if test="remarks != null" >
+                                    remarks = #{remarks},
+                          </if>
+        </set>
+        WHERE id = #{id}
+      </update>
+
+
+	<insert id="insert">
+		INSERT INTO erp_docker(
+                        id,
+                erp_shipments_id,
+                docker_no,
+                seal_no,
+                parts,
+                create_by,
+                create_date,
+                update_by,
+                update_date,
+                remarks,
+                del_flag
+		) VALUES (
+                        #{id},
+                #{erpShipments.id},
+                #{dockerNo},
+                #{sealNo},
+                #{parts},
+                #{createBy.id},
+                #{createDate},
+                #{updateBy.id},
+                #{updateDate},
+                #{remarks},
+                #{delFlag}
+		)
+	</insert>
+	
+	<update id="update">
+		UPDATE erp_docker SET 	
+                        erp_shipments_id = #{erpShipments.id},
+                docker_no = #{dockerNo},
+                seal_no = #{sealNo},
+                parts = #{parts},
+                update_by = #{updateBy.id},
+                update_date = #{updateDate},
+                remarks = #{remarks}
+		WHERE id = #{id}
+	</update>
+	
+	<update id="delete">
+		UPDATE erp_docker SET 
+			del_flag = #{DEL_FLAG_DELETE}
+		WHERE id = #{id}
+	</update>
+
+	<!--  ======================================================================================== -->
+
+</mapper>

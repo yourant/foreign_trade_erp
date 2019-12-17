@@ -1,0 +1,354 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+        <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+        <mapper namespace="com.fy.erp.modules.erp.dao.ErpCustomerDao">
+    
+	<sql id="erpCustomerColumns">
+        		a.id AS "id",
+		a.id_sys_user AS "user.id",
+		a.aname AS "aname",
+		a.company AS "company",
+		a.email AS "email",
+		a.phone AS "phone",
+		a.address AS "address",
+		a.country AS "sysCountry.id",
+		a.enmu_customer_source AS "enmuCustomerSource",
+		a.enmu_customer_type AS "enmuCustomerType",
+		a.create_by AS "createBy.id",
+		a.create_date AS "createDate",
+		max(cv.update_by) AS "updateBy.id", /* 最后一次跟踪访问事件*/
+		a.update_date AS "updateDate",
+		a.remarks AS "remarks",
+		a.del_flag AS "delFlag",
+		u2.name AS "user.name",
+        sc.aname AS "sysCountry.aname"
+	</sql>
+	
+	<sql id="erpCustomerJoins">
+        LEFT JOIN erp_customer_visit cv ON a.id = cv.erp_customer_id
+        LEFT JOIN sys_user u2 ON u2.id = a.id_sys_user
+        LEFT JOIN sys_office o3 ON o3.id = u2.office_id
+        LEFT JOIN sys_country sc ON sc.id = a.country
+    </sql>
+    
+	<select id="get" resultType="ErpCustomer">
+		SELECT 
+			<include refid="erpCustomerColumns"/>
+		FROM erp_customer a
+		<include refid="erpCustomerJoins"/>
+		WHERE a.id = #{id}
+	</select>
+	
+	<select id="findList" resultType="ErpCustomer">
+		SELECT 
+			<include refid="erpCustomerColumns"/>
+		FROM erp_customer a
+		<include refid="erpCustomerJoins"/>
+		<where>
+			1 = 1
+            <if test="user != null and user.id != null and user.id != ''">
+                AND a.id_sys_user = #{user.id}
+            </if>
+			<if test="aname != null and aname != ''">
+				AND a.aname LIKE 
+					<if test="dbName == 'oracle'">'%'||#{aname}||'%'</if>
+					<if test="dbName == 'mssql'">'%'+#{aname}+'%'</if>
+					<if test="dbName == 'mysql'">concat('%',#{aname},'%')</if>
+			</if>
+			<if test="company != null and company != ''">
+				AND a.company LIKE 
+					<if test="dbName == 'oracle'">'%'||#{company}||'%'</if>
+					<if test="dbName == 'mssql'">'%'+#{company}+'%'</if>
+					<if test="dbName == 'mysql'">concat('%',#{company},'%')</if>
+			</if>
+			<if test="email != null and email != ''">
+				AND a.email LIKE 
+					<if test="dbName == 'oracle'">'%'||#{email}||'%'</if>
+					<if test="dbName == 'mssql'">'%'+#{email}+'%'</if>
+					<if test="dbName == 'mysql'">concat('%',#{email},'%')</if>
+			</if>
+			<if test="phone != null and phone != ''">
+				AND a.phone LIKE 
+					<if test="dbName == 'oracle'">'%'||#{phone}||'%'</if>
+					<if test="dbName == 'mssql'">'%'+#{phone}+'%'</if>
+					<if test="dbName == 'mysql'">concat('%',#{phone},'%')</if>
+			</if>
+			<if test="address != null and address != ''">
+				AND a.address LIKE 
+					<if test="dbName == 'oracle'">'%'||#{address}||'%'</if>
+					<if test="dbName == 'mssql'">'%'+#{address}+'%'</if>
+					<if test="dbName == 'mysql'">concat('%',#{address},'%')</if>
+			</if>
+			<if test="sysCountry != null and sysCountry.id != null and sysCountry.id != ''">
+				AND a.country = #{sysCountry.id}
+			</if>
+			<if test="enmuCustomerSource != null and enmuCustomerSource != ''">
+				AND a.enmu_customer_source = #{enmuCustomerSource}
+			</if>
+			<if test="enmuCustomerType != null and enmuCustomerType != ''">
+				AND a.enmu_customer_type = #{enmuCustomerType}
+			</if>
+			<if test="delFlag != null and delFlag != ''">
+				AND a.del_flag = #{delFlag}
+			</if>
+        </where>
+
+        ${sqlMap.dsf}
+
+        GROUP BY
+            a.id,
+            a.id_sys_user,
+            a.aname,
+            a.company,
+            a.email,
+            a.phone,
+            a.address,
+            a.country,
+            a.enmu_customer_source,
+            a.enmu_customer_type,
+            a.create_by,
+            a.create_date,
+            a.remarks,
+            a.del_flag,
+            u2.NAME,
+            sc.aname
+        <choose>
+			<when test="page !=null and page.orderBy != null and page.orderBy != ''">
+				ORDER BY ${page.orderBy}
+			</when>
+			<otherwise>
+				ORDER BY a.update_date DESC
+			</otherwise>
+		</choose>
+	</select>
+	
+	<select id="findAllList" resultType="ErpCustomer">
+		SELECT 
+			<include refid="erpCustomerColumns"/>
+		FROM erp_customer a
+		<include refid="erpCustomerJoins"/>
+		<where>
+			a.del_flag = #{DEL_FLAG_NORMAL}
+		</where>		
+		<choose>
+			<when test="page !=null and page.orderBy != null and page.orderBy != ''">
+				ORDER BY ${page.orderBy}
+			</when>
+			<otherwise>
+				ORDER BY a.update_date DESC
+			</otherwise>
+		</choose>
+	</select>
+
+
+    <insert id="insertSelective">
+        INSERT INTO erp_customer
+        <trim prefix="(" suffix=")" suffixOverrides="," >
+                  <if test="id != null">
+                    id,
+                  </if>
+                  <if test="id_sys_user != null">
+                    id_sys_user,
+                  </if>
+                  <if test="aname != null">
+                    aname,
+                  </if>
+                  <if test="company != null">
+                    company,
+                  </if>
+                  <if test="email != null">
+                    email,
+                  </if>
+                  <if test="phone != null">
+                    phone,
+                  </if>
+                  <if test="address != null">
+                    address,
+                  </if>
+                  <if test="country != null">
+                    country,
+                  </if>
+                  <if test="enmu_customer_source != null">
+                    enmu_customer_source,
+                  </if>
+                  <if test="enmu_customer_type != null">
+                    enmu_customer_type,
+                  </if>
+                  <if test="create_by != null">
+                    create_by,
+                  </if>
+                  <if test="create_date != null">
+                    create_date,
+                  </if>
+                  <if test="update_by != null">
+                    update_by,
+                  </if>
+                  <if test="update_date != null">
+                    update_date,
+                  </if>
+                  <if test="remarks != null">
+                    remarks,
+                  </if>
+                  <if test="del_flag != null">
+                    del_flag,
+                  </if>
+        </trim>
+        <trim prefix="VALUES (" suffix=")" suffixOverrides="," >
+                  <if test="id != null" >
+                    #{id},
+                  </if>
+                  <if test="user.id != null" >
+                    #{user.id},
+                  </if>
+                  <if test="aname != null" >
+                    #{aname},
+                  </if>
+                  <if test="company != null" >
+                    #{company},
+                  </if>
+                  <if test="email != null" >
+                    #{email},
+                  </if>
+                  <if test="phone != null" >
+                    #{phone},
+                  </if>
+                  <if test="address != null" >
+                    #{address},
+                  </if>
+                  <if test="sysCountry.id != null" >
+                    #{sysCountry.id},
+                  </if>
+                  <if test="enmuCustomerSource != null" >
+                    #{enmuCustomerSource},
+                  </if>
+                  <if test="enmuCustomerType != null" >
+                    #{enmuCustomerType},
+                  </if>
+                  <if test="createBy.id != null" >
+                    #{createBy.id},
+                  </if>
+                  <if test="createDate != null" >
+                    #{createDate},
+                  </if>
+                  <if test="updateBy.id != null" >
+                    #{updateBy.id},
+                  </if>
+                  <if test="updateDate != null" >
+                    #{updateDate},
+                  </if>
+                  <if test="remarks != null" >
+                    #{remarks},
+                  </if>
+                  <if test="delFlag != null" >
+                    #{delFlag},
+                  </if>
+        </trim>
+    </insert>
+
+     <update id="updateSelective">
+        UPDATE erp_customer
+        <set>
+                          <if test="id_sys_user != null" >
+                                    id_sys_user = #{user.id},
+                          </if>
+                          <if test="aname != null" >
+                                    aname = #{aname},
+                          </if>
+                          <if test="company != null" >
+                                    company = #{company},
+                          </if>
+                          <if test="email != null" >
+                                    email = #{email},
+                          </if>
+                          <if test="phone != null" >
+                                    phone = #{phone},
+                          </if>
+                          <if test="address != null" >
+                                    address = #{address},
+                          </if>
+                          <if test="country != null" >
+                                    country = #{sysCountry.id},
+                          </if>
+                          <if test="enmu_customer_source != null" >
+                                    enmu_customer_source = #{enmuCustomerSource},
+                          </if>
+                          <if test="enmu_customer_type != null" >
+                                    enmu_customer_type = #{enmuCustomerType},
+                          </if>
+                          <if test="update_by != null" >
+                                    update_by = #{updateBy.id},
+                          </if>
+                          <if test="update_date != null" >
+                                    update_date = #{updateDate},
+                          </if>
+                          <if test="remarks != null" >
+                                    remarks = #{remarks},
+                          </if>
+        </set>
+        WHERE id = #{id}
+      </update>
+
+
+	<insert id="insert">
+		INSERT INTO erp_customer(
+                        id,
+                id_sys_user,
+                aname,
+                company,
+                email,
+                phone,
+                address,
+                country,
+                enmu_customer_source,
+                enmu_customer_type,
+                create_by,
+                create_date,
+                update_by,
+                update_date,
+                remarks,
+                del_flag
+		) VALUES (
+                        #{id},
+                #{user.id},
+                #{aname},
+                #{company},
+                #{email},
+                #{phone},
+                #{address},
+                #{sysCountry.id},
+                #{enmuCustomerSource},
+                #{enmuCustomerType},
+                #{createBy.id},
+                #{createDate},
+                #{updateBy.id},
+                #{updateDate},
+                #{remarks},
+                #{delFlag}
+		)
+	</insert>
+	
+	<update id="update">
+		UPDATE erp_customer SET 	
+                        id_sys_user = #{user.id},
+                aname = #{aname},
+                company = #{company},
+                email = #{email},
+                phone = #{phone},
+                address = #{address},
+                country = #{sysCountry.id},
+                enmu_customer_source = #{enmuCustomerSource},
+                enmu_customer_type = #{enmuCustomerType},
+                update_by = #{updateBy.id},
+                update_date = #{updateDate},
+                remarks = #{remarks}
+		WHERE id = #{id}
+	</update>
+	
+	<update id="delete">
+		UPDATE erp_customer SET 
+			del_flag = #{DEL_FLAG_DELETE}
+		WHERE id = #{id}
+	</update>
+
+	<!--  ======================================================================================== -->
+
+</mapper>

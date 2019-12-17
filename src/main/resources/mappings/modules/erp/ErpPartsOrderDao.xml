@@ -1,0 +1,268 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+        <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+        <mapper namespace="com.fy.erp.modules.erp.dao.ErpPartsOrderDao">
+    
+	<sql id="erpPartsOrderColumns">
+        		a.id AS "id",
+		a.pi AS "pi",
+		a.pi_file AS "piFile",
+		a.price AS "price",
+		a.status AS "status",
+		a.create_by AS "createBy.id",
+		a.create_date AS "createDate",
+		a.update_by AS "updateBy.id",
+		a.update_date AS "updateDate",
+		a.remarks AS "remarks",
+		a.del_flag AS "delFlag",
+        b.id AS "erpExpress.id",
+        b.express_no AS "erpExpress.expressNo",
+        b.express_date AS "erpExpress.expressDate",
+        b.enum_express_company AS "erpExpress.enumExpressCompany",
+        b.price AS "erpExpress.price",
+        b.remarks AS "erpExpress.remarks",
+        c.id AS "erpShipments.id",
+        c.blno AS "erpShipments.blno",
+        c.notice_file AS "erpShipments.noticeFile",
+        c.enum_bill_type AS "erpShipments.enumBillType",
+        c.delivery_time AS "erpShipments.deliveryTime",
+        c.bill_manifest_no AS "erpShipments.billManifestNo",
+        c.bill_manifest_file AS "erpShipments.billManifestFile",
+        c.bill_lading_file AS "erpShipments.billLadingFile",
+        c.price_manifest_file AS "erpShipments.priceManifestFile",
+        c.send_time AS "erpShipments.sendTime",
+        c.pre_come_time AS "erpShipments.preComeTime",
+        c.enum_shipments_type AS "erpShipments.enumShipmentsType",
+        c.remarks AS "erpShipments.remarks"
+	</sql>
+	
+	<sql id="erpPartsOrderJoins">
+        LEFT JOIN sys_user u7 ON u7.id = a.create_by
+        LEFT JOIN sys_user u9 ON u9.id = a.update_by
+        LEFT JOIN erp_express b ON b.erp_parts_order_id = a.id
+        LEFT JOIN erp_shipments c ON c.erp_parts_order_id = a.id
+	</sql>
+    
+	<select id="get" resultType="ErpPartsOrder">
+		SELECT 
+			<include refid="erpPartsOrderColumns"/>
+		FROM erp_parts_order a
+		<include refid="erpPartsOrderJoins"/>
+		WHERE a.id = #{id}
+	</select>
+	
+	<select id="findList" resultType="ErpPartsOrder">
+		SELECT 
+			<include refid="erpPartsOrderColumns"/>
+		FROM erp_parts_order a
+		<include refid="erpPartsOrderJoins"/>
+		<where>
+			a.del_flag = #{DEL_FLAG_NORMAL}
+			<if test="pi != null and pi != ''">
+				AND a.pi LIKE 
+					<if test="dbName == 'oracle'">'%'||#{pi}||'%'</if>
+					<if test="dbName == 'mssql'">'%'+#{pi}+'%'</if>
+					<if test="dbName == 'mysql'">concat('%',#{pi},'%')</if>
+			</if>
+			<if test="piFile != null and piFile != ''">
+				AND a.pi_file LIKE
+					<if test="dbName == 'oracle'">'%'||#{piFile}||'%'</if>
+					<if test="dbName == 'mssql'">'%'+#{piFile}+'%'</if>
+					<if test="dbName == 'mysql'">concat('%',#{piFile},'%')</if>
+			</if>
+			<if test="status != null and status != ''">
+				AND a.status = #{status}
+			</if>
+			<if test="updateDate != null and updateDate != ''">
+				AND a.update_date = #{updateDate}
+			</if>
+			<if test="remarks != null and remarks != ''">
+				AND a.remarks LIKE 
+					<if test="dbName == 'oracle'">'%'||#{remarks}||'%'</if>
+					<if test="dbName == 'mssql'">'%'+#{remarks}+'%'</if>
+					<if test="dbName == 'mysql'">concat('%',#{remarks},'%')</if>
+			</if>
+			<if test="delFlag != null and delFlag != ''">
+				AND a.del_flag = #{delFlag}
+			</if>
+		</where>
+		<choose>
+			<when test="page !=null and page.orderBy != null and page.orderBy != ''">
+				ORDER BY ${page.orderBy}
+			</when>
+			<otherwise>
+				ORDER BY a.update_date DESC
+			</otherwise>
+		</choose>
+	</select>
+	
+	<select id="findAllList" resultType="ErpPartsOrder">
+		SELECT 
+			<include refid="erpPartsOrderColumns"/>
+		FROM erp_parts_order a
+		<include refid="erpPartsOrderJoins"/>
+		<where>
+			a.del_flag = #{DEL_FLAG_NORMAL}
+		</where>		
+		<choose>
+			<when test="page !=null and page.orderBy != null and page.orderBy != ''">
+				ORDER BY ${page.orderBy}
+			</when>
+			<otherwise>
+				ORDER BY a.update_date DESC
+			</otherwise>
+		</choose>
+	</select>
+
+
+    <insert id="insertSelective">
+        INSERT INTO erp_parts_order
+        <trim prefix="(" suffix=")" suffixOverrides="," >
+                  <if test="id != null">
+                    id,
+                  </if>
+                  <if test="pi != null">
+                    pi,
+                  </if>
+                  <if test="piFile != null">
+                    pi_file,
+                  </if>
+                  <if test="price != null">
+                      price,
+                  </if>
+                  <if test="status != null">
+                    status,
+                  </if>
+                  <if test="create_by != null">
+                    create_by,
+                  </if>
+                  <if test="create_date != null">
+                    create_date,
+                  </if>
+                  <if test="update_by != null">
+                    update_by,
+                  </if>
+                  <if test="update_date != null">
+                    update_date,
+                  </if>
+                  <if test="remarks != null">
+                    remarks,
+                  </if>
+                  <if test="del_flag != null">
+                    del_flag,
+                  </if>
+        </trim>
+        <trim prefix="VALUES (" suffix=")" suffixOverrides="," >
+                  <if test="id != null" >
+                    #{id},
+                  </if>
+                  <if test="pi != null" >
+                    #{pi},
+                  </if>
+                  <if test="piFile != null" >
+                    #{piFile},
+                  </if>
+                  <if test="price != null" >
+                    #{price},
+                  </if>
+                  <if test="status != null" >
+                    #{status},
+                  </if>
+                  <if test="createBy.id != null" >
+                    #{createBy.id},
+                  </if>
+                  <if test="createDate != null" >
+                    #{createDate},
+                  </if>
+                  <if test="updateBy.id != null" >
+                    #{updateBy.id},
+                  </if>
+                  <if test="updateDate != null" >
+                    #{updateDate},
+                  </if>
+                  <if test="remarks != null" >
+                    #{remarks},
+                  </if>
+                  <if test="delFlag != null" >
+                    #{delFlag},
+                  </if>
+        </trim>
+    </insert>
+
+     <update id="updateSelective">
+        UPDATE erp_parts_order
+        <set>
+                          <if test="pi != null" >
+                                    pi = #{pi},
+                          </if>
+                          <if test="piFile != null" >
+                                    pi_file = #{piFile},
+                          </if>
+                          <if test="price != null" >
+                                    price = #{price},
+                          </if>
+                          <if test="status != null" >
+                                    status = #{status},
+                          </if>
+                          <if test="update_by != null" >
+                                    update_by = #{updateBy.id},
+                          </if>
+                          <if test="update_date != null" >
+                                    update_date = #{updateDate},
+                          </if>
+                          <if test="remarks != null" >
+                                    remarks = #{remarks},
+                          </if>
+        </set>
+        WHERE id = #{id}
+      </update>
+
+
+	<insert id="insert">
+		INSERT INTO erp_parts_order(
+                        id,
+                pi,
+                pi_file,
+                price,
+                status,
+                create_by,
+                create_date,
+                update_by,
+                update_date,
+                remarks,
+                del_flag
+		) VALUES (
+                        #{id},
+                #{pi},
+                #{piFile},
+                #{price},
+                #{status},
+                #{createBy.id},
+                #{createDate},
+                #{updateBy.id},
+                #{updateDate},
+                #{remarks},
+                #{delFlag}
+		)
+	</insert>
+	
+	<update id="update">
+		UPDATE erp_parts_order SET 	
+                        pi = #{pi},
+                pi_file = #{piFile},
+                price = #{price},
+                status = #{status},
+                update_by = #{updateBy.id},
+                update_date = #{updateDate},
+                remarks = #{remarks}
+		WHERE id = #{id}
+	</update>
+	
+	<update id="delete">
+		UPDATE erp_parts_order SET 
+			del_flag = #{DEL_FLAG_DELETE}
+		WHERE id = #{id}
+	</update>
+
+	<!--  ======================================================================================== -->
+
+</mapper>

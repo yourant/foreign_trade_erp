@@ -1,0 +1,89 @@
+<?xml version="1.0" encoding="utf-8"?>
+<template>
+	<name>viewForm</name>
+	<filePath>src/main/webapp/WEB-INF/views/${lastPackageName}/${moduleName}/${subModuleName}</filePath>
+	<fileName>${className}View.jsp</fileName>
+	<content><![CDATA[
+<%@ page contentType="text/html;charset=UTF-8" %>
+<%@ include file="/WEB-INF/views/include/taglib.jsp"%>
+<html>
+<head>
+	<title>${functionNameSimple}管理</title>
+	<meta name="decorator" content="default"/>
+	<script type="text/javascript">
+		$(document).ready(function() {
+			//$("#name").focus();
+			$("#inputForm").validate({
+				submitHandler: function(form){
+					loading('正在提交，请稍等...');
+					form.submit();
+				},
+				errorContainer: "#messageBox",
+				errorPlacement: function(error, element) {
+					$("#messageBox").text("输入有误，请先更正。");
+					if (element.is(":checkbox")||element.is(":radio")||element.parent().is(".input-append")){
+						error.appendTo(element.parent().parent());
+					} else {
+						error.insertAfter(element);
+					}
+				}
+			});
+		});
+	</script>
+</head>
+<body>
+	<ul class="nav nav-tabs  my-nav-tabs ">
+		<li><a href="${r"${ctx}"}/${urlPrefix}/">${functionNameSimple}列表</a></li>
+		<li class="active"><a href="${r"${ctx}"}/${urlPrefix}/form?id=${"${"+className+".id}"}">${functionNameSimple}<shiro:hasPermission name="${permissionPrefix}:edit">${r"${not empty "+className+".id?(isForEdit?'修改':'查看'):'添加'}"}</shiro:hasPermission><shiro:lacksPermission name="${permissionPrefix}:edit">查看</shiro:lacksPermission></a></li>
+	</ul><br/>
+	<div class="my-container">
+        <form:form id="inputForm" modelAttribute="${className}" action="${r"${ctx}"}/${urlPrefix}/save" method="post" class="form-horizontal">
+            <form:hidden path="id"/>
+            <sys:message content="${r"${message}"}"/>
+            <#list table.columnList as c>
+                <#if c.isEdit?? && c.isEdit == "1" && (c.isNotBaseField || c.simpleJavaField == 'remarks')>
+            <div class="control-group">
+                <label class="control-label">${c.comments}：</label>
+                <div class="controls">
+                <#if c.showType == "input">
+                    ${r"${"}${className}.${c.javaFieldId}${r"}"}
+                <#elseif c.showType == "textarea">
+                    <pre>
+                    ${r"${"}${className}.${c.javaFieldId}${r"}"}
+                    </pre>
+                <#elseif c.showType == "select">
+                    ${"$"}{fns:getDictLabel(${className}.${c.javaFieldId},'${c.dictType}','')}
+                    <#--<form:select path="${c.javaFieldId}" class="input-xlarge <#if c.isNull != "1">required</#if>"  readonly="true" disabled="true">-->
+                        <#--<form:option value="" label=""/>-->
+                        <#--<form:options items="${"$"}{fns:getDictList('${c.dictType}')}" itemLabel="label" itemValue="value" htmlEscape="false"/>-->
+                    <#--</form:select>-->
+                <#elseif c.showType == "checkbox">
+                    <form:checkboxes path="${c.javaFieldId}" items="${"$"}{fns:getDictList('${c.dictType}')}" itemLabel="label" itemValue="value" htmlEscape="false" class="<#if c.isNull != "1">required</#if>" readonly="true" disabled="true"/>
+                <#elseif c.showType == "radiobox">
+                    <form:radiobuttons path="${c.javaFieldId}" items="${"$"}{fns:getDictList('${c.dictType}')}" itemLabel="label" itemValue="value" htmlEscape="false" class="<#if c.isNull != "1">required</#if>" readonly="true" disabled="true"/>
+                <#elseif c.showType == "dateselect">
+                    <fmt:formatDate value="${r"${"}${className}.${c.javaFieldId}${r"}"}" pattern="yyyy-MM-dd" />
+                <#elseif c.showType == "userselect">
+                    ${r"${"}${className}.${c.simpleJavaField}.name${r"}"}
+                <#elseif c.showType == "officeselect">
+                    ${r"${"}${className}.${c.simpleJavaField}.name${r"}"}
+                <#elseif c.showType == "areaselect">
+                    ${r"${"}${className}.${c.simpleJavaField}.name${r"}"}
+                <#elseif c.showType == "fileselect">
+                    <form:hidden id="${c.simpleJavaField}" path="${c.javaFieldId}" htmlEscape="false"<#if c.dataLength != "0"> maxlength="${c.dataLength}"</#if> class="input-xlarge"/>
+                    <sys:ckfinder input="${c.simpleJavaField}" type="files" uploadPath="/${moduleName}<#if subModuleName != "">/${subModuleName}</#if>/${className}" selectMultiple="true"   readonly="true"/>
+                </#if>
+                </div>
+            </div>
+                </#if>
+            </#list>
+            <div class="form-actions my-form-actions hide">
+                <shiro:hasPermission name="${permissionPrefix}:save"><input id="btnSubmit" class="btn btn-primary" type="submit" value="保 存"/>&nbsp;</shiro:hasPermission>
+                <input id="btnCancel" class="btn hide" type="button" value="返 回" onclick="history.go(-1)"/>
+            </div>
+        </form:form>
+    </div>
+</body>
+</html>]]>
+	</content>
+</template>

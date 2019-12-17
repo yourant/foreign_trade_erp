@@ -1,0 +1,73 @@
+<?xml version="1.0" encoding="utf-8"?>
+<template>
+	<name>entity</name>
+	<filePath>src/main/kotlin/${packageName}/${moduleName}/entity/${subModuleName}</filePath>
+	<fileName>${ClassName}.kt</fileName>
+	<content><![CDATA[
+/**
+ *
+ */
+package ${packageName}.${moduleName}.entity<#if subModuleName != "">.${subModuleName}</#if>
+
+<#list table.importList as i>
+import ${i}
+</#list>
+import com.fy.erp.common.persistence.TreeEntity
+
+/**
+ * ${functionName}Entity
+ * @author ${functionAuthor}
+ * @version ${functionVersion}
+ */
+class ${ClassName} : TreeEntity<${ClassName}> {
+	
+	constructor() : super() {}
+
+    constructor(id: String) : super(id) {}
+
+    @JsonBackReference
+    @NotNull(message = "父级编号不能为空")
+    override fun getParent(): ${ClassName}? {
+        return parent
+    }
+
+	override fun setParent(parent: ${ClassName}) {
+        this.parent = parent
+    }
+
+    @Length(min = 1, max = 2000, message = "所有父级编号长度必须介于 1 和 2000 之间")
+    override fun getParentIds(): String? {
+        return parentIds
+    }
+
+    override fun setParentIds(parentIds: String) {
+        this.parentIds = parentIds
+    }
+
+    @Length(min = 1, max = 100, message = "名称长度必须介于 1 和 100 之间")
+    override fun getName(): String? {
+        return name
+    }
+
+    override fun setName(name: String) {
+        this.name = name
+    }
+
+    @NotNull(message = "排序不能为空")
+    override fun getSort(): Int? {
+        return sort
+    }
+
+    override fun setSort(sort: Int?) {
+        this.sort = sort
+    }
+
+    override fun getParentId(): String {
+        return if (parent != null && parent!!.getId() != null) parent!!.getId() else "0"
+    }
+
+    // ========================================================================================
+
+}]]>
+	</content>
+</template>

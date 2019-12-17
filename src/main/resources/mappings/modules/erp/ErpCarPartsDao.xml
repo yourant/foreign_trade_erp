@@ -1,0 +1,292 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+        <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+        <mapper namespace="com.fy.erp.modules.erp.dao.ErpCarPartsDao">
+    
+	<sql id="erpCarPartsColumns">
+        		a.id AS "id",
+		a.aname AS "aname",
+		a.en_name AS "enName",
+		a.erp_car_type_id AS "erpCarType.id",
+		a.erp_engine_type_id AS "erpEngineType.id",
+		a.image AS "image",
+		a.price AS "price",
+		a.unit AS "unit",
+		a.create_by AS "createBy.id",
+		a.create_date AS "createDate",
+		a.update_by AS "updateBy.id",
+		a.update_date AS "updateDate",
+		a.remarks AS "remarks",
+		a.del_flag AS "delFlag",
+        ct.aname AS "erpCarType.aname",
+        et.aname AS "erpEngineType.aname"
+	</sql>
+	
+	<sql id="erpCarPartsJoins">
+        LEFT JOIN erp_car_type ct ON ct.id = a.erp_car_type_id
+        LEFT JOIN erp_engine_type et ON et.id = a.erp_engine_type_id
+	</sql>
+    
+	<select id="get" resultType="ErpCarParts">
+		SELECT 
+			<include refid="erpCarPartsColumns"/>
+		FROM erp_car_parts a
+		<include refid="erpCarPartsJoins"/>
+		WHERE a.id = #{id}
+	</select>
+	
+	<select id="findList" resultType="ErpCarParts">
+		SELECT 
+			<include refid="erpCarPartsColumns"/>
+		FROM erp_car_parts a
+		<include refid="erpCarPartsJoins"/>
+		<where>
+			<if test="aname != null and aname != ''">
+				AND a.aname LIKE
+					<if test="dbName == 'oracle'">'%'||#{aname}||'%'</if>
+					<if test="dbName == 'mssql'">'%'+#{aname}+'%'</if>
+					<if test="dbName == 'mysql'">concat('%',#{aname},'%')</if>
+			</if>
+			<if test="enName != null and enName != ''">
+				AND a.en_name LIKE 
+					<if test="dbName == 'oracle'">'%'||#{enName}||'%'</if>
+					<if test="dbName == 'mssql'">'%'+#{enName}+'%'</if>
+					<if test="dbName == 'mysql'">concat('%',#{enName},'%')</if>
+			</if>
+			<if test="erpCarType != null and erpCarType.id != null and erpCarType.id != ''">
+				AND a.erp_car_type_id = #{erpCarType.id}
+			</if>
+			<if test="erpEngineType != null and erpEngineType.id != null and erpEngineType.id != ''">
+				AND a.erp_engine_type_id = #{erpEngineType.id}
+			</if>
+			<if test="price != null and price != ''">
+				AND a.price &gt;= #{price}
+			</if>
+			<if test="updateDate != null and updateDate != ''">
+				AND a.update_date = #{updateDate}
+			</if>
+			<if test="remarks != null and remarks != ''">
+				AND a.remarks LIKE 
+					<if test="dbName == 'oracle'">'%'||#{remarks}||'%'</if>
+					<if test="dbName == 'mssql'">'%'+#{remarks}+'%'</if>
+					<if test="dbName == 'mysql'">concat('%',#{remarks},'%')</if>
+			</if>
+			<if test="delFlag != null and delFlag != ''">
+				AND a.del_flag = #{delFlag}
+			</if>
+		</where>
+		<choose>
+			<when test="page !=null and page.orderBy != null and page.orderBy != ''">
+				ORDER BY ${page.orderBy}
+			</when>
+			<otherwise>
+				ORDER BY a.update_date DESC
+			</otherwise>
+		</choose>
+	</select>
+	
+	<select id="findAllList" resultType="ErpCarParts">
+		SELECT 
+			<include refid="erpCarPartsColumns"/>
+		FROM erp_car_parts a
+		<include refid="erpCarPartsJoins"/>
+		<where>
+			a.del_flag = #{DEL_FLAG_NORMAL}
+		</where>		
+		<choose>
+			<when test="page !=null and page.orderBy != null and page.orderBy != ''">
+				ORDER BY ${page.orderBy}
+			</when>
+			<otherwise>
+				ORDER BY a.update_date DESC
+			</otherwise>
+		</choose>
+	</select>
+
+
+    <insert id="insertSelective">
+        INSERT INTO erp_car_parts
+        <trim prefix="(" suffix=")" suffixOverrides="," >
+                  <if test="id != null">
+                    id,
+                  </if>
+                  <if test="aname != null">
+                    aname,
+                  </if>
+                  <if test="en_name != null">
+                    en_name,
+                  </if>
+                  <if test="erp_car_type_id != null">
+                    erp_car_type_id,
+                  </if>
+                  <if test="erp_engine_type_id != null">
+                    erp_engine_type_id,
+                  </if>
+                  <if test="image != null">
+                    image,
+                  </if>
+                  <if test="unit != null">
+                    unit,
+                  </if>
+                  <if test="price != null">
+                    price,
+                  </if>
+                  <if test="create_by != null">
+                    create_by,
+                  </if>
+                  <if test="create_date != null">
+                    create_date,
+                  </if>
+                  <if test="update_by != null">
+                    update_by,
+                  </if>
+                  <if test="update_date != null">
+                    update_date,
+                  </if>
+                  <if test="remarks != null">
+                    remarks,
+                  </if>
+                  <if test="del_flag != null">
+                    del_flag,
+                  </if>
+        </trim>
+        <trim prefix="VALUES (" suffix=")" suffixOverrides="," >
+                  <if test="id != null" >
+                    #{id},
+                  </if>
+                  <if test="aname != null" >
+                    #{aname},
+                  </if>
+                  <if test="enName != null" >
+                    #{enName},
+                  </if>
+                  <if test="erpCarType.id != null" >
+                    #{erpCarType.id},
+                  </if>
+                  <if test="erpEngineType.id != null" >
+                    #{erpEngineType.id},
+                  </if>
+                  <if test="image != null" >
+                    #{image},
+                  </if>
+                  <if test="unit != null">
+                    #{unit},
+                  </if>
+                  <if test="price != null" >
+                    #{price},
+                  </if>
+                  <if test="createBy.id != null" >
+                    #{createBy.id},
+                  </if>
+                  <if test="createDate != null" >
+                    #{createDate},
+                  </if>
+                  <if test="updateBy.id != null" >
+                    #{updateBy.id},
+                  </if>
+                  <if test="updateDate != null" >
+                    #{updateDate},
+                  </if>
+                  <if test="remarks != null" >
+                    #{remarks},
+                  </if>
+                  <if test="delFlag != null" >
+                    #{delFlag},
+                  </if>
+        </trim>
+    </insert>
+
+     <update id="updateSelective">
+        UPDATE erp_car_parts
+        <set>
+                          <if test="aname != null" >
+                                    aname = #{aname},
+                          </if>
+                          <if test="en_name != null" >
+                                    en_name = #{enName},
+                          </if>
+                          <if test="erp_car_type_id != null" >
+                                    erp_car_type_id = #{erpCarType.id},
+                          </if>
+                          <if test="erp_engine_type_id != null" >
+                                    erp_engine_type_id = #{erpEngineType.id},
+                          </if>
+                          <if test="image != null" >
+                                    image = #{image},
+                          </if>
+                          <if test="price != null" >
+                                    price = #{price},
+                          </if>
+                          <if test="unit != null">
+                                    unit = #{unit},
+                          </if>
+                          <if test="update_by != null" >
+                                    update_by = #{updateBy.id},
+                          </if>
+                          <if test="update_date != null" >
+                                    update_date = #{updateDate},
+                          </if>
+                          <if test="remarks != null" >
+                                    remarks = #{remarks},
+                          </if>
+        </set>
+        WHERE id = #{id}
+      </update>
+
+
+	<insert id="insert">
+		INSERT INTO erp_car_parts(
+                        id,
+                aname,
+                en_name,
+                erp_car_type_id,
+                erp_engine_type_id,
+                image,
+                unit,
+                price,
+                create_by,
+                create_date,
+                update_by,
+                update_date,
+                remarks,
+                del_flag
+		) VALUES (
+                        #{id},
+                #{aname},
+                #{enName},
+                #{erpCarType.id},
+                #{erpEngineType.id},
+                #{image},
+                #{unit},
+                #{price},
+                #{createBy.id},
+                #{createDate},
+                #{updateBy.id},
+                #{updateDate},
+                #{remarks},
+                #{delFlag}
+		)
+	</insert>
+	
+	<update id="update">
+		UPDATE erp_car_parts SET 	
+                        aname = #{aname},
+                en_name = #{enName},
+                erp_car_type_id = #{erpCarType.id},
+                erp_engine_type_id = #{erpEngineType.id},
+                image = #{image},
+                price = #{price},
+                update_by = #{updateBy.id},
+                update_date = #{updateDate},
+                remarks = #{remarks}
+		WHERE id = #{id}
+	</update>
+	
+	<update id="delete">
+		UPDATE erp_car_parts SET 
+			del_flag = #{DEL_FLAG_DELETE}
+		WHERE id = #{id}
+	</update>
+
+	<!--  ======================================================================================== -->
+
+</mapper>

@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.fy.erp.modules.gen.dao.GenAddColumnSqlDao">
+
+    <select id="getTables" resultType="java.util.Map">
+        SELECT *
+        FROM information_schema.TABLES t
+        WHERE t.TABLE_SCHEMA = #{schema} AND t.TABLE_NAME LIKE concat(#{tablePrefix}, '%')
+    </select>
+
+    <select id="getColumns" resultType="java.util.Map">
+        SELECT *
+        FROM information_schema.COLUMNS t
+        WHERE t.TABLE_SCHEMA = #{schema} AND t.TABLE_NAME = #{tableName}
+        ORDER BY t.ORDINAL_POSITION DESC
+        LIMIT 1;
+    </select>
+
+</mapper>

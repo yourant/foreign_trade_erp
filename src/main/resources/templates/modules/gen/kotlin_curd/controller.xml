@@ -1,0 +1,79 @@
+<?xml version="1.0" encoding="utf-8"?>
+<template>
+    <name>controller</name>
+    <filePath>src/main/kotlin/${packageName}/${moduleName}/web/${subModuleName}</filePath>
+    <fileName>${ClassName}Controller.kt</fileName>
+    <content><![CDATA[
+package ${packageName}.${moduleName}.web<#if subModuleName != "">.${subModuleName}</#if>
+
+import com.fy.erp.alias.*
+import com.fy.erp.common.config.Global
+import com.fy.erp.common.persistence.Page
+import org.apache.commons.lang3.StringUtils.*
+import ${packageName}.${moduleName}.entity<#if subModuleName != "">.${subModuleName}</#if>.${ClassName}
+import ${packageName}.${moduleName}.service<#if subModuleName != "">.${subModuleName}</#if>.${ClassName}Service
+
+/**
+ * ${functionName}Controller
+ * @author ${functionAuthor}
+ * @version ${functionVersion}
+ */
+@C
+@RM("\${r"${adminPath}"}/${urlPrefix}")
+class ${ClassName}Controller : BC() {
+
+	@A
+	lateinit var ${className}Service: ${ClassName}Service
+	
+	@MA
+	operator fun get(@RP(required=false) id:String?): ${ClassName} {
+		return if (isNotBlank(id)) ${className}Service.get(id!!) else ${ClassName}()
+	}
+	
+	@RM(*arrayOf("list", ""))
+	@PERM("${permissionPrefix}:list")
+	fun list(${className}: ${ClassName}, req: REQ, res: RES, m: M): String{
+		val page = ${className}Service.findPage(Page(req, res), ${className})
+        m.addAttribute("page", page)
+		return "${lastPackageName}/${viewPrefix}List"
+	}
+
+    @RM("form")
+	@PERM("${permissionPrefix}:form")
+    fun form(${className}: ${ClassName}, m: M): String {
+        m.addAttribute("${className}", ${className})
+		return "${lastPackageName}/${viewPrefix}Form"
+    }
+
+    @RM("view")
+    @PERM("${permissionPrefix}:view")
+    fun view(${className}: ${ClassName}, m: M): String {
+        m.addAttribute("${className}", ${className})
+        m.addAttribute("isForEdit", false)
+        return "${lastPackageName}/${viewPrefix}View"
+    }
+
+    @RM("save")
+    @PERM("${permissionPrefix}:save")
+    fun save(${className}: ${ClassName}, m: M, ra: RA): String {
+        if (!beanValidator(m, ${className})) {
+            return form(${className}, m)
+        }
+        ${className}Service.save(${className})
+        addMessage(ra, "保存${functionNameSimple}成功")
+        return "redirect:${r"${Global.getAdminPath()}"}/${viewPrefix}/?repage"
+    }
+
+    @RM("delete")
+    @PERM("${permissionPrefix}:delete")
+    fun delete(${className}: ${ClassName}, ra: RA): String {
+        ${className}Service.delete(${className})
+        addMessage(ra, "删除${functionNameSimple}成功")
+        return "redirect:${r"${Global.getAdminPath()}"}/${viewPrefix}/?repage"
+    }
+
+    // ========================================================================================
+}
+        ]]>
+	</content>
+</template>

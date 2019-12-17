@@ -1,0 +1,329 @@
+package com.fy.erp.modules.erp.service;
+
+import com.fy.erp.common.persistence.Page
+import com.fy.erp.common.service.CrudService
+import com.fy.erp.common.service.enu.NextOperation
+import com.fy.erp.modules.act.entity.Act
+import com.fy.erp.modules.act.service.ActTaskService
+import com.fy.erp.modules.act.utils.ActUtils
+import com.fy.erp.modules.erp.dao.ErpDockerDao
+import com.fy.erp.modules.erp.dao.ErpRepairOrderDao
+import com.fy.erp.modules.erp.dao.ErpSendItemsDao
+import com.fy.erp.modules.erp.dao.ErpVinDao
+import com.fy.erp.modules.erp.entity.*
+import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.stereotype.Service
+import org.springframework.transaction.annotation.Transactional
+import com.fy.erp.modules.erp.entity.RepairOrderTaskID
+import com.fy.erp.modules.erp.entity.RepairOrderTaskID.*
+import org.apache.commons.lang3.StringUtils
+import org.springframework.transaction.annotation.Propagation
+import java.util.*
+
+/**
+ * 三包订单Service
+ * @author 尹彬
+ * @version 2017-11-06
+ */
+@Service
+@Transactional(readOnly = true)
+open class ErpRepairOrderService : CrudService<ErpRepairOrderDao, ErpRepairOrder>() {
+
+    @Autowired
+    lateinit var actTaskService: ActTaskService
+
+    @Autowired
+    lateinit var erpExpressService: ErpExpressService
+    @Autowired
+    lateinit var erpShipmentsService: ErpShipmentsService
+    @Autowired
+    lateinit var erpSendItemsService: ErpSendItemsService
+
+    @Autowired
+    lateinit var erpSendItemsDao: ErpSendItemsDao
+    @Autowired
+    lateinit var erpDockerDao: ErpDockerDao
+
+    override fun get(id: String): ErpRepairOrder {
+        val erpRepairOrder = super.get(id)
+        erpRepairOrder.erpSendItemsList = erpSendItemsService.findList(ErpSendItems(erpRepairOrder))
+        //查询集装箱信息
+        if (erpRepairOrder.erpShipments != null) {
+            erpRepairOrder.erpShipments!!.erpDockerList = erpDockerDao.findList(ErpDocker(erpRepairOrder.erpShipments!!))
+        }
+        //查询到的发货信息根据vinID 查询配件表单
+        val list = mutableListOf<ErpVinDTO>()
+        erpRepairOrder.erpSendItemsList.map { child ->
+            list.add(dao.findVinDTOById(child.erpVin!!.id))
+        }
+        //去重
+        val vinDTOList = mutableListOf<ErpVinDTO>()
+        list.forEach {
+            if (Collections.frequency(vinDTOList, it) < 1) {
+                vinDTOList.add(it)
+            }
+        }
+        erpRepairOrder.erpVinDTOList = vinDTOList
+        return erpRepairOrder
+    }
+
+    override fun findList(erpRepairOrder: ErpRepairOrder): List<ErpRepairOrder> {
+        return super.findList(erpRepairOrder)
+    }
+
+    override fun findPage(page: Page<ErpRepairOrder>, erpRepairOrder: ErpRepairOrder): Page<ErpRepairOrder> {
+        return super.findPage(page, erpRepairOrder)
+    }
+
+
+    // ========================================================================================
+
+    @Transactional(readOnly = false)
+    override fun save(erpRepairOrder: ErpRepairOrder): Int {
+        val count = super.save(erpRepairOrder)
+        var expressCount = 0
+        var shipmentsCount = 0
+        if (erpRepairOrder.erpExpress != null) {//快递信息不为空则保存
+            erpRepairOrder.erpExpress!!.erpRepairOrder = erpRepairOrder
+            expressCount = erpExpressService.save(erpRepairOrder.erpExpress!!)
+        }
+        val dockerKeyMap = hashMapOf<String, String>()
+        if (erpRepairOrder.erpShipments != null) {//拼箱信息不为空则保存
+            erpRepairOrder.erpShipments!!.erpRepairOrder = erpRepairOrder
+            shipmentsCount = erpShipmentsService.save(erpRepairOrder.erpShipments!!)
+            //保存集装箱信息
+            val dockerCount = erpRepairOrder.erpShipments!!.erpDockerList.map { child ->
+                val count = when (getNextOperation(child)!!) {
+                    NextOperation.INSERT -> { // 插入的情况
+                        child.erpShipments = erpRepairOrder.erpShipments!!
+                        child.preInsert()
+                        erpDockerDao.insert(child)
+                    }
+                    NextOperation.UPDATE -> {  // 更新的情况
+                        child.preUpdate()
+                        erpDockerDao.update(child)
+                    }
+                    NextOperation.DELETE -> { //删除的情况
+                        erpDockerDao.delete(child)
+                    }
+                }
+                dockerKeyMap[(child.dockerNo + "-" + child.sealNo)] = child.id
+                count
+            }.sumBy { it }
+        }
+        //发货信息 只能有一种发货方式
+        val sendItemsCount = erpRepairOrder.erpSendItemsList.map { child ->
+            if (StringUtils.isNotBlank(child.dockerKey) && child.statusKey == "shipments") {
+                child.erpDocker = ErpDocker(dockerKeyMap[child.dockerKey]!!)
+            }
+            when {
+                child.statusKey == "express" -> {//发快递的
+                    child.erpExpress = erpRepairOrder.erpExpress
+                    child.erpDocker = null
+                }
+                child.statusKey == "shipments" -> {//发拼箱的
+                    child.erpDocker!!.erpShipments = erpRepairOrder.erpShipments
+                    child.erpExpress = null
+                }
+                else -> {
+                    child.erpDocker = null
+                    child.erpExpress = null
+                }
+            }
+            child.enumSendItemsType = "1" // 发送配件类型 1：三包单
+            child.erpRepairOrder = erpRepairOrder
+            when (getNextOperation(child)!!) {
+                NextOperation.INSERT -> { // 插入的情况
+                    child.preInsert()
+                    erpSendItemsDao.insert(child)
+                }
+                NextOperation.UPDATE -> {  // 更新的情况
+                    child.preUpdate()
+                    erpSendItemsDao.update(child)
+                }
+                NextOperation.DELETE -> { //删除的情况
+                    erpSendItemsDao.delete(child)
+                }
+            }
+        }.sumBy { it }
+        return count + expressCount + shipmentsCount + sendItemsCount
+    }
+
+    @Transactional(readOnly = false,propagation = Propagation.NEVER)
+    override fun delete(erpRepairOrder: ErpRepairOrder): Int {
+        //        彻底删除销售订单前，先工作流信息清楚
+
+        try {
+            actTaskService.taskService.addComment(erpRepairOrder.act.taskId, erpRepairOrder.act.procInsId, "管理员强制删除");//备注
+            actTaskService.runtimeService.deleteProcessInstance(erpRepairOrder.act.procInsId, "");
+            actTaskService.historyService.deleteHistoricProcessInstance(erpRepairOrder.act.procInsId);//(顺序不能换)
+        } catch (e: Exception) {
+        }
+
+        return super.delete(erpRepairOrder)
+    }
+
+    fun findVinDTOById(vinId: String): ErpVinDTO {
+        return dao.findVinDTOById(vinId)
+    }
+
+    /**
+     * 保存三包订单
+     * 开启工作流
+     */
+    @Transactional(readOnly = false)
+    fun saveAndProcess(erpRepairOrder: ErpRepairOrder) {
+        /*
+           1：startProcess方法需要businessId，就是this.save(erpRepairOrder)，生成uuid
+           2：而执行startProcess方法前需要判断页面上传入的erpRepairOrder.id，根据是否为空来执行不同的工作流方法
+           所以提前声明id
+            */
+        val id = erpRepairOrder.id
+
+        // 保存草稿
+        this.save(erpRepairOrder)
+
+        // 不是草稿，则一定是开启流程
+        if (!erpRepairOrder.isDraft) {
+            oaComplete(erpRepairOrder, id)
+        }
+    }
+
+    /**
+     * 开启流程 并根据解决方案类型流转不同的节点 1：维修，2：配件
+     */
+    fun oaComplete(erpRepairOrder: ErpRepairOrder, id: String) {
+        val act = erpRepairOrder.act
+        val vars = hashMapOf<String, Any>()
+
+        if (StringUtils.isBlank(id) || StringUtils.isBlank(act.taskId)) { // id 是空，则是新建三包订单流程
+            vars["businessId"] = erpRepairOrder.id
+            val type = erpRepairOrder.enumSolutionType //根据解决方案类型流转不同的节点 1：维修，2：配件
+            var typeStr = ""
+            if (type == "1") {
+                vars["enumSolutionType"] = 1
+                typeStr = "维修"
+            } else {
+                vars["enumSolutionType"] = 2
+                typeStr = "配件"
+            }
+
+            // 开启三包订单流程
+            val procInsId = actTaskService.startProcess(ActUtils.PD_REPAIR_ORDER[0], ActUtils.PD_REPAIR_ORDER[1], erpRepairOrder.id, "三包：" + typeStr, vars)
+
+            // 保存业务对象数据对应的流程实例id
+            act.procInsId = procInsId
+            // 新建三包订单，调用startProcess方法的页面不在流程中，所以无法获取act，更无法通过calOrderStatusByProcessIns(act: Act)计算出status
+            erpRepairOrder.status = "1" // 新建三包订单
+            super.save(erpRepairOrder)
+
+        } else {
+            vars["pass"] = act.flag
+
+            actTaskService.taskService.setVariableLocal(act.taskId, "pass", act.flag)
+            // 完成任务，流转下一节点
+            actTaskService.complete(act.taskId, act.procInsId, act.comment, vars)
+
+
+            // 根据流程当前执行节点，返回订单业务状态
+            erpRepairOrder.status = calOrderStatusByProcessIns(act, vars)
+
+            // 记录状态到业务表
+            super.save(erpRepairOrder)
+        }
+    }
+
+    /**
+     * 如果不是保存草稿，那么一定是流转下一步
+     */
+    fun calOrderStatusByProcessIns(act: Act, vars: MutableMap<String, Any>): String {
+        val taskDefKey = act.taskDefKey
+        return when (valueOf(taskDefKey)) {
+            BEGIN -> {
+                "1"
+            }
+            CREATE_SEND_ITEMS -> {
+                "3" // 录入配件信息
+            }
+            CHECK_SEND_ITEMS -> {
+                if (act.flag == "1") {
+                    "4" // 配件审批通过
+                } else {
+                    "5" // 配件未审批通过
+                }
+            }
+            CREATE_SHIPPING_INFO -> {
+                "6" // 录入发货信息
+            }
+            CHECK_SHIPPING_INFO -> {
+                if (act.flag == "1") {
+                    "7" // 发货信息审批通过
+                } else {
+                    "8" // 发货信息未审批通过
+                }
+            }
+            CREATE_REPAIR_METHOD -> {
+                "2"
+            }
+            END -> {
+                "13" // 订单完成
+            }
+        }
+    }
+
+    /**
+     * 获取上一节点的审批信息
+     */
+    private fun getApproveInfoFromPreNode(procInsId: String?): Pair<String?, String?> {
+        val lastTask = actTaskService.historyService.createHistoricTaskInstanceQuery()
+                .processInstanceId(procInsId).orderByHistoricTaskInstanceEndTime().desc().list().first()
+
+        val lastTaskVari = actTaskService.historyService.createHistoricVariableInstanceQuery()
+                .variableName("pass")
+                .taskId(lastTask.id)
+                .singleResult()
+
+        val comment = actTaskService.taskService.getTaskComments(lastTask.id)
+
+        return Pair(lastTaskVari?.value?.toString(), if (comment.size > 0) {
+            comment.last().fullMessage
+        } else null)
+    }
+
+    fun oaForm(erpRepairOrder: ErpRepairOrder): String {
+        //  设置上一步审批结果
+        val (flag, comment) = getApproveInfoFromPreNode(erpRepairOrder.act.procInsId)
+        erpRepairOrder.act.flag = flag
+        erpRepairOrder.act.comment = comment
+
+        //  返回不同的表单
+        val taskDefKey = erpRepairOrder.act.taskDefKey
+        return when (RepairOrderTaskID.valueOf(taskDefKey)) {
+            BEGIN -> {
+                //  开始页面位于流程外，点击“提交下一步时”，开始节点会立刻自动流转到下一节点，永远不会执行到此
+                ""
+            }
+            CREATE_SEND_ITEMS -> {
+                "erpSendItemsForm"
+            }
+            CHECK_SEND_ITEMS -> {
+                "checkErpSendItemsForm"
+            }
+            CREATE_SHIPPING_INFO -> {
+                "erpSendItemsForm"
+            }
+            CHECK_SHIPPING_INFO -> {
+                "checkErpSendItemsForm"
+            }
+            CREATE_REPAIR_METHOD -> {
+                "erpRepairMethodForm"
+            }
+            END -> {
+                //   流程已结束后，没有流程实例了，则代办任务不可见，则此form方法不会执行
+                ""
+            }
+        }
+    }
+
+
+}

@@ -1,0 +1,258 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+        <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+        <mapper namespace="com.fy.erp.modules.erp.dao.ErpExpressDao">
+    
+	<sql id="erpExpressColumns">
+        		a.id AS "id",
+		a.express_no AS "expressNo",
+		a.enum_express_company AS "enumExpressCompany",
+		a.express_date AS "expressDate",
+		a.price AS "price",
+		a.create_by AS "createBy.id",
+		a.create_date AS "createDate",
+		a.update_by AS "updateBy.id",
+		a.update_date AS "updateDate",
+		a.remarks AS "remarks",
+		a.del_flag AS "delFlag",
+	</sql>
+	
+	<sql id="erpExpressJoins">
+		LEFT JOIN sys_user u5 ON u5.id = a.create_by
+		LEFT JOIN sys_user u7 ON u7.id = a.update_by
+        LEFT JOIN erp_repair_order ro ON ro.id = a.erp_repair_order_id
+	</sql>
+    
+	<select id="get" resultType="ErpExpress">
+		SELECT 
+			<include refid="erpExpressColumns"/>
+		FROM erp_express a
+		<include refid="erpExpressJoins"/>
+		WHERE a.id = #{id}
+	</select>
+	
+	<select id="findList" resultType="ErpExpress">
+		SELECT 
+			<include refid="erpExpressColumns"/>
+		FROM erp_express a
+		<include refid="erpExpressJoins"/>
+		<where>
+			a.del_flag = #{DEL_FLAG_NORMAL}
+			<if test="expressNo != null and expressNo != ''">
+				AND a.express_no LIKE 
+					<if test="dbName == 'oracle'">'%'||#{expressNo}||'%'</if>
+					<if test="dbName == 'mssql'">'%'+#{expressNo}+'%'</if>
+					<if test="dbName == 'mysql'">concat('%',#{expressNo},'%')</if>
+			</if>
+			<if test="enumExpressCompany != null and enumExpressCompany != ''">
+				AND a.enum_express_company = #{enumExpressCompany}
+			</if>
+			<if test="price != null and price != ''">
+				AND a.price &gt;= #{price}
+			</if>
+			<if test="updateDate != null and updateDate != ''">
+				AND a.update_date = #{updateDate}
+			</if>
+			<if test="remarks != null and remarks != ''">
+				AND a.remarks LIKE 
+					<if test="dbName == 'oracle'">'%'||#{remarks}||'%'</if>
+					<if test="dbName == 'mssql'">'%'+#{remarks}+'%'</if>
+					<if test="dbName == 'mysql'">concat('%',#{remarks},'%')</if>
+			</if>
+			<if test="delFlag != null and delFlag != ''">
+				AND a.del_flag = #{delFlag}
+			</if>
+		</where>
+		<choose>
+			<when test="page !=null and page.orderBy != null and page.orderBy != ''">
+				ORDER BY ${page.orderBy}
+			</when>
+			<otherwise>
+				ORDER BY a.update_date DESC
+			</otherwise>
+		</choose>
+	</select>
+	
+	<select id="findAllList" resultType="ErpExpress">
+		SELECT 
+			<include refid="erpExpressColumns"/>
+		FROM erp_express a
+		<include refid="erpExpressJoins"/>
+		<where>
+			a.del_flag = #{DEL_FLAG_NORMAL}
+		</where>		
+		<choose>
+			<when test="page !=null and page.orderBy != null and page.orderBy != ''">
+				ORDER BY ${page.orderBy}
+			</when>
+			<otherwise>
+				ORDER BY a.update_date DESC
+			</otherwise>
+		</choose>
+	</select>
+
+
+    <insert id="insertSelective">
+        INSERT INTO erp_express
+        <trim prefix="(" suffix=")" suffixOverrides="," >
+                  <if test="id != null">
+                    id,
+                  </if>
+                  <if test="express_no != null">
+                    express_no,
+                  </if>
+                  <if test="enum_express_company != null">
+                    enum_express_company,
+                  </if>
+                  <if test="express_date != null">
+                      express_date,
+                  </if>
+                  <if test="price != null">
+                    price,
+                  </if>
+                  <if test="create_by != null">
+                    create_by,
+                  </if>
+                  <if test="create_date != null">
+                    create_date,
+                  </if>
+                  <if test="update_by != null">
+                    update_by,
+                  </if>
+                  <if test="update_date != null">
+                    update_date,
+                  </if>
+                  <if test="remarks != null">
+                    remarks,
+                  </if>
+                  <if test="del_flag != null">
+                    del_flag,
+                  </if>
+        </trim>
+        <trim prefix="VALUES (" suffix=")" suffixOverrides="," >
+                  <if test="id != null" >
+                    #{id},
+                  </if>
+                  <if test="expressNo != null" >
+                    #{expressNo},
+                  </if>
+                  <if test="enumExpressCompany != null" >
+                    #{enumExpressCompany},
+                  </if>
+                  <if test="expressDate != null" >
+                    #{expressDate},
+                  </if>
+                  <if test="price != null" >
+                    #{price},
+                  </if>
+                  <if test="createBy.id != null" >
+                    #{createBy.id},
+                  </if>
+                  <if test="createDate != null" >
+                    #{createDate},
+                  </if>
+                  <if test="updateBy.id != null" >
+                    #{updateBy.id},
+                  </if>
+                  <if test="updateDate != null" >
+                    #{updateDate},
+                  </if>
+                  <if test="remarks != null" >
+                    #{remarks},
+                  </if>
+                  <if test="delFlag != null" >
+                    #{delFlag},
+                  </if>
+        </trim>
+    </insert>
+
+     <update id="updateSelective">
+        UPDATE erp_express
+        <set>
+                          <if test="express_no != null" >
+                                    express_no = #{expressNo},
+                          </if>
+                          <if test="enum_express_company != null" >
+                                    enum_express_company = #{enumExpressCompany},
+                          </if>
+                          <if test="expressDate != null" >
+                                    express_date = #{expressDate},
+                          </if>
+                          <if test="price != null" >
+                                    price = #{price},
+                          </if>
+                          <if test="update_by != null" >
+                                    update_by = #{updateBy.id},
+                          </if>
+                          <if test="update_date != null" >
+                                    update_date = #{updateDate},
+                          </if>
+                          <if test="remarks != null" >
+                                    remarks = #{remarks},
+                          </if>
+        </set>
+        WHERE id = #{id}
+      </update>
+
+
+	<insert id="insert">
+		INSERT INTO erp_express(
+                        id,
+                express_no,
+                enum_express_company,
+                express_date,
+                price,
+                create_by,
+                create_date,
+                update_by,
+                update_date,
+                remarks,
+                del_flag,
+                <if test="erpRepairOrder != null and erpRepairOrder.id !=null and erpRepairOrder.id != ''" >
+                    erp_repair_order_id
+                </if>
+                <if test="erpPartsOrder != null and erpPartsOrder.id !=null and erpPartsOrder.id != ''" >
+                    erp_parts_order_id
+                </if>
+		) VALUES (
+                        #{id},
+                #{expressNo},
+                #{enumExpressCompany},
+                #{expressDate},
+                #{price},
+                #{createBy.id},
+                #{createDate},
+                #{updateBy.id},
+                #{updateDate},
+                #{remarks},
+                #{delFlag},
+                <if test="erpRepairOrder != null and erpRepairOrder.id !=null and erpRepairOrder.id != ''" >
+                    #{erpRepairOrder.id}
+                </if>
+                <if test="erpPartsOrder != null and erpPartsOrder.id !=null and erpPartsOrder.id != ''" >
+                    #{erpPartsOrder.id}
+                </if>
+
+		)
+	</insert>
+	
+	<update id="update">
+		UPDATE erp_express SET 	
+                        express_no = #{expressNo},
+                enum_express_company = #{enumExpressCompany},
+                express_date = #{expressDate},
+                price = #{price},
+                update_by = #{updateBy.id},
+                update_date = #{updateDate},
+                remarks = #{remarks}
+		WHERE id = #{id}
+	</update>
+	
+	<update id="delete">
+		UPDATE erp_express SET 
+			del_flag = #{DEL_FLAG_DELETE}
+		WHERE id = #{id}
+	</update>
+
+	<!--  ======================================================================================== -->
+
+</mapper>

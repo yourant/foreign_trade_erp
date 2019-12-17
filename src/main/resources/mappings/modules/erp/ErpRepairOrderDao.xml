@@ -1,0 +1,301 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+        <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+        <mapper namespace="com.fy.erp.modules.erp.dao.ErpRepairOrderDao">
+    
+	<sql id="erpRepairOrderColumns">
+        		a.id AS "id",
+		a.enum_solution_type AS "enumSolutionType",
+		a.question AS "question",
+		a.repair_method AS "repairMethod",
+		a.require_parts AS "requireParts",
+		a.status AS "status",
+		a.create_by AS "createBy.id",
+		a.create_date AS "createDate",
+		a.update_by AS "updateBy.id",
+		a.update_date AS "updateDate",
+		a.remarks AS "remarks",
+		a.del_flag AS "delFlag",
+        b.id AS "erpExpress.id",
+        b.express_no AS "erpExpress.expressNo",
+        b.express_date AS "erpExpress.expressDate",
+        b.enum_express_company AS "erpExpress.enumExpressCompany",
+        b.price AS "erpExpress.price",
+        b.remarks AS "erpExpress.remarks",
+        c.id AS "erpShipments.id",
+        c.blno AS "erpShipments.blno",
+        c.notice_file AS "erpShipments.noticeFile",
+        c.enum_bill_type AS "erpShipments.enumBillType",
+        c.delivery_time AS "erpShipments.deliveryTime",
+        c.bill_manifest_no AS "erpShipments.billManifestNo",
+        c.bill_manifest_file AS "erpShipments.billManifestFile",
+        c.bill_lading_file AS "erpShipments.billLadingFile",
+        c.price_manifest_file AS "erpShipments.priceManifestFile",
+        c.send_time AS "erpShipments.sendTime",
+        c.pre_come_time AS "erpShipments.preComeTime",
+        c.enum_shipments_type AS "erpShipments.enumShipmentsType",
+        c.remarks AS "erpShipments.remarks"
+
+	</sql>
+	
+	<sql id="erpRepairOrderJoins">
+		LEFT JOIN sys_user u7 ON u7.id = a.create_by
+		LEFT JOIN sys_user u9 ON u9.id = a.update_by
+        LEFT JOIN erp_express b ON b.erp_repair_order_id = a.id
+        LEFT JOIN erp_shipments c ON c.erp_repair_order_id = a.id
+	</sql>
+    
+	<select id="get" resultType="ErpRepairOrder">
+		SELECT 
+			<include refid="erpRepairOrderColumns"/>
+		FROM erp_repair_order a
+		<include refid="erpRepairOrderJoins"/>
+		WHERE a.id = #{id}
+	</select>
+
+	<select id="findList" resultType="ErpRepairOrder">
+		SELECT 
+			<include refid="erpRepairOrderColumns"/>
+		FROM erp_repair_order a
+		<include refid="erpRepairOrderJoins"/>
+		<where>
+			a.del_flag = #{DEL_FLAG_NORMAL}
+			<if test="enumSolutionType != null and enumSolutionType != ''">
+				AND a.enum_solution_type = #{enumSolutionType}
+			</if>
+			<if test="question != null and question != ''">
+				AND a.question LIKE 
+					<if test="dbName == 'oracle'">'%'||#{question}||'%'</if>
+					<if test="dbName == 'mssql'">'%'+#{question}+'%'</if>
+					<if test="dbName == 'mysql'">concat('%',#{question},'%')</if>
+			</if>
+			<if test="repairMethod != null and repairMethod != ''">
+				AND a.repair_method LIKE 
+					<if test="dbName == 'oracle'">'%'||#{repairMethod}||'%'</if>
+					<if test="dbName == 'mssql'">'%'+#{repairMethod}+'%'</if>
+					<if test="dbName == 'mysql'">concat('%',#{repairMethod},'%')</if>
+			</if>
+			<if test="requireParts != null and requireParts != ''">
+				AND a.require_parts LIKE 
+					<if test="dbName == 'oracle'">'%'||#{requireParts}||'%'</if>
+					<if test="dbName == 'mssql'">'%'+#{requireParts}+'%'</if>
+					<if test="dbName == 'mysql'">concat('%',#{requireParts},'%')</if>
+			</if>
+			<if test="status != null and status != ''">
+				AND a.status = #{status}
+			</if>
+			<if test="updateDate != null and updateDate != ''">
+				AND a.update_date = #{updateDate}
+			</if>
+			<if test="remarks != null and remarks != ''">
+				AND a.remarks LIKE 
+					<if test="dbName == 'oracle'">'%'||#{remarks}||'%'</if>
+					<if test="dbName == 'mssql'">'%'+#{remarks}+'%'</if>
+					<if test="dbName == 'mysql'">concat('%',#{remarks},'%')</if>
+			</if>
+			<if test="delFlag != null and delFlag != ''">
+				AND a.del_flag = #{delFlag}
+			</if>
+		</where>
+		<choose>
+			<when test="page !=null and page.orderBy != null and page.orderBy != ''">
+				ORDER BY ${page.orderBy}
+			</when>
+			<otherwise>
+				ORDER BY a.update_date DESC
+			</otherwise>
+		</choose>
+	</select>
+	
+	<select id="findAllList" resultType="ErpRepairOrder">
+		SELECT 
+			<include refid="erpRepairOrderColumns"/>
+		FROM erp_repair_order a
+		<include refid="erpRepairOrderJoins"/>
+		<where>
+			a.del_flag = #{DEL_FLAG_NORMAL}
+		</where>		
+		<choose>
+			<when test="page !=null and page.orderBy != null and page.orderBy != ''">
+				ORDER BY ${page.orderBy}
+			</when>
+			<otherwise>
+				ORDER BY a.update_date DESC
+			</otherwise>
+		</choose>
+	</select>
+
+
+    <insert id="insertSelective">
+        INSERT INTO erp_repair_order
+        <trim prefix="(" suffix=")" suffixOverrides="," >
+                  <if test="id != null">
+                    id,
+                  </if>
+                  <if test="enum_solution_type != null">
+                    enum_solution_type,
+                  </if>
+                  <if test="question != null">
+                    question,
+                  </if>
+                  <if test="repair_method != null">
+                    repair_method,
+                  </if>
+                  <if test="require_parts != null">
+                    require_parts,
+                  </if>
+                  <if test="status != null">
+                    status,
+                  </if>
+                  <if test="create_by != null">
+                    create_by,
+                  </if>
+                  <if test="create_date != null">
+                    create_date,
+                  </if>
+                  <if test="update_by != null">
+                    update_by,
+                  </if>
+                  <if test="update_date != null">
+                    update_date,
+                  </if>
+                  <if test="remarks != null">
+                    remarks,
+                  </if>
+                  <if test="del_flag != null">
+                    del_flag,
+                  </if>
+        </trim>
+        <trim prefix="VALUES (" suffix=")" suffixOverrides="," >
+                  <if test="id != null" >
+                    #{id},
+                  </if>
+                  <if test="enumSolutionType != null" >
+                    #{enumSolutionType},
+                  </if>
+                  <if test="question != null" >
+                    #{question},
+                  </if>
+                  <if test="repairMethod != null" >
+                    #{repairMethod},
+                  </if>
+                  <if test="requireParts != null" >
+                    #{requireParts},
+                  </if>
+                  <if test="status != null" >
+                    #{status},
+                  </if>
+                  <if test="createBy.id != null" >
+                    #{createBy.id},
+                  </if>
+                  <if test="createDate != null" >
+                    #{createDate},
+                  </if>
+                  <if test="updateBy.id != null" >
+                    #{updateBy.id},
+                  </if>
+                  <if test="updateDate != null" >
+                    #{updateDate},
+                  </if>
+                  <if test="remarks != null" >
+                    #{remarks},
+                  </if>
+                  <if test="delFlag != null" >
+                    #{delFlag},
+                  </if>
+        </trim>
+    </insert>
+
+     <update id="updateSelective">
+        UPDATE erp_repair_order
+        <set>
+                          <if test="enum_solution_type != null" >
+                                    enum_solution_type = #{enumSolutionType},
+                          </if>
+                          <if test="question != null" >
+                                    question = #{question},
+                          </if>
+                          <if test="repair_method != null" >
+                                    repair_method = #{repairMethod},
+                          </if>
+                          <if test="require_parts != null" >
+                                    require_parts = #{requireParts},
+                          </if>
+                          <if test="status != null" >
+                                    status = #{status},
+                          </if>
+                          <if test="remarks != null" >
+                                    remarks = #{remarks},
+                          </if>
+        </set>
+        WHERE id = #{id}
+      </update>
+
+
+	<insert id="insert">
+		INSERT INTO erp_repair_order(
+                        id,
+                enum_solution_type,
+                question,
+                repair_method,
+                require_parts,
+                status,
+                create_by,
+                create_date,
+                update_by,
+                update_date,
+                remarks,
+                del_flag
+		) VALUES (
+                        #{id},
+                #{enumSolutionType},
+                #{question},
+                #{repairMethod},
+                #{requireParts},
+                #{status},
+                #{createBy.id},
+                #{createDate},
+                #{updateBy.id},
+                #{updateDate},
+                #{remarks},
+                #{delFlag}
+		)
+	</insert>
+	
+	<update id="update">
+		UPDATE erp_repair_order SET 	
+                        enum_solution_type = #{enumSolutionType},
+                question = #{question},
+                repair_method = #{repairMethod},
+                require_parts = #{requireParts},
+                status = #{status},
+                remarks = #{remarks}
+		WHERE id = #{id}
+	</update>
+	
+	<update id="delete">
+		UPDATE erp_repair_order SET 
+			del_flag = #{DEL_FLAG_DELETE}
+		WHERE id = #{id}
+	</update>
+
+	<!--  ======================================================================================== -->
+    <select id="findVinDTOById" resultType="com.fy.erp.modules.erp.entity.ErpVinDTO">
+        SELECT
+        a.id AS "id",
+        a.engine_no AS "engineNo",
+        a.vin_no AS "vinNo",
+        d.aname AS "erpCarType.aname",
+        d.id AS "erpCarType.id",
+        e.aname AS "erpEngineType.aname",
+        e.id AS "erpEngineType.id",
+        f.pi_no AS "pi"
+        FROM
+        erp_vin a
+        LEFT JOIN erp_production_items b ON b.id = a.erp_production_items_id
+        LEFT JOIN erp_production_order c ON c.id = b.erp_production_order_id
+        LEFT JOIN erp_car_type d ON d.id = b.erp_car_type_id
+        LEFT JOIN erp_engine_type e ON e.id = b.erp_engine_type_id
+        LEFT JOIN erp_sales_order f ON f.id = c.erp_sales_order_id
+        WHERE a.id = #{vinId}
+    </select>
+</mapper>

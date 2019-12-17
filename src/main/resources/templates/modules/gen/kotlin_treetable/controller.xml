@@ -1,0 +1,103 @@
+<?xml version="1.0" encoding="utf-8"?>
+<template>
+	<name>controller</name>
+	<filePath>src/main/kotlin/${packageName}/${moduleName}/web/${subModuleName}</filePath>
+	<fileName>${ClassName}Controller.kt</fileName>
+	<content><![CDATA[
+package ${packageName}.${moduleName}.web<#if subModuleName != "">.${subModuleName}</#if>
+
+import com.fy.erp.alias.*
+import com.google.common.collect.Lists
+import org.apache.commons.lang3.StringUtils.*
+import com.fy.erp.common.config.Global
+
+import ${packageName}.${moduleName}.entity<#if subModuleName != "">.${subModuleName}</#if>.${ClassName}
+import ${packageName}.${moduleName}.service<#if subModuleName != "">.${subModuleName}</#if>.${ClassName}Service
+
+/**
+ * ${functionName}Controller
+ * @author ${functionAuthor}
+ * @version ${functionVersion}
+ */
+@C
+@RM("\${r"${adminPath}"}/${urlPrefix}")
+class ${ClassName}Controller : BC() {
+
+	@A
+    lateinit var ${className}Service: ${ClassName}Service
+	
+	@MA
+	operator fun get(@RP(required = false) id: String?): ${ClassName} {
+        return if (isNoneBlank(id)) ${className}Service.get(id!!) else ${ClassName}()
+    }
+
+	@PERM("${permissionPrefix}:list")
+    @RM(*arrayOf("list", ""))
+    fun list(${className}: ${ClassName}, req: REQ, res: RES, m: M): String {
+        val list = ${className}Service.findList(${className})
+        m.addAttribute("list", list)
+        return "${lastPackageName}/${viewPrefix}List"
+    }
+
+	@PERM("${permissionPrefix}:from")
+    @RM("form")
+    fun form(${className}: ${ClassName}, m: M): String {
+        if (${className}.parent != null && isNotBlank(${className}.parent!!.id)) {
+            ${className}.setParent(${className}Service.get(${className}.parent!!.id))
+            // 获取排序号，最末节点排序号+30
+            if (isBlank(${className}.id)) {
+                val ${className}Child = ${ClassName}()
+                ${className}Child.setParent(${ClassName}(${className}.parent!!.id))
+                val list = ${className}Service.findList(${className})
+                if (list.size > 0) {
+                    ${className}.sort = list[list.size - 1].sort
+                    if (${className}.sort != null) {
+                        ${className}.sort = ${className}.sort!! + 30
+                    }
+                }
+            }
+        }
+        if (${className}.sort == null) {
+            ${className}.sort = 30
+        }
+        m.addAttribute("${className}", ${className})
+        return "${lastPackageName}/${viewPrefix}Form"
+    }
+
+	@PERM("${permissionPrefix}:save")
+    @RM("save")
+    fun save(${className}: ${ClassName}, m: M, ra: RA): String {
+        if (!beanValidator(m, ${className})) {
+            return form(${className}, m)
+        }
+        ${className}Service.save(${className})
+        addMessage(ra, "保存${functionNameSimple}成功")
+        return "redirect:${r"${Global.getAdminPath()}"}/${viewPrefix}/?repage"
+    }
+
+	@PERM("${permissionPrefix}:edit")
+    @RM("delete")
+    fun delete(${className}: ${ClassName}, ra: RA): String {
+        ${className}Service.delete(${className})
+        addMessage(ra, "删除${functionNameSimple}成功")
+        return "redirect:${r"${Global.getAdminPath()}"}/${viewPrefix}/?repage"
+    }
+
+	@PERM("${permissionPrefix}:treeData")
+    @RB
+    @RM("treeData")
+    fun treeData(@RP(required = false) extId: String?, res: RES): List<Map<String, Any>> {
+        val mapList = Lists.newArrayList<Map<String, Any>>()
+        val list = ${className}Service.findList(${ClassName}())
+        list.indices
+                .map { list[it] }
+                .filter { isBlank(extId) || extId != null && extId != it.id && it.parentIds!!.indexOf(",$extId,") == -1 }
+                .mapTo(mapList) { mapOf("id" to it.id!!, "pId" to it.parentId, "name" to it.name!!) }
+        return mapList
+    }
+
+	// ========================================================================================
+
+}]]>
+	</content>
+</template>

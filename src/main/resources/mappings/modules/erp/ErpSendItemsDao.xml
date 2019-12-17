@@ -1,0 +1,293 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+        <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+        <mapper namespace="com.fy.erp.modules.erp.dao.ErpSendItemsDao">
+    
+	<sql id="erpSendItemsColumns">
+        		a.id AS "id",
+		a.count AS "count",
+		a.enum_send_items_type AS "enumSendItemsType",
+		a.erp_express_id AS "erpExpress.id",
+		a.erp_parts_order_id AS "erpPartsOrder.id",
+		a.erp_repair_order_id AS "erpRepairOrder.id",
+		a.erp_docker_id AS "erpDocker.id",
+		a.erp_car_parts_id AS "erpCarParts.id",
+		a.erp_vin_id AS "erpVin.id",
+		a.create_by AS "createBy.id",
+		a.create_date AS "createDate",
+		a.update_by AS "updateBy.id",
+		a.update_date AS "updateDate",
+		a.remarks AS "remarks",
+		a.del_flag AS "delFlag",
+        e.aname AS "erpCarParts.aname",
+        e.price AS "erpCarParts.price",
+        ct.aname AS "erpCarParts.erpCarType.aname",
+        et.aname AS "erpCarParts.erpEngineType.aname",
+        f.vin_no AS "erpVin.vinNo",
+        g.docker_no AS "erpDocker.dockerNo",
+        g.seal_no AS "erpDocker.sealNo",
+        g.parts AS "erpDocker.parts"
+
+	</sql>
+	
+	<sql id="erpSendItemsJoins">
+        LEFT JOIN erp_car_parts e ON e.id = a.erp_car_parts_id
+        LEFT JOIN erp_vin f ON f.id = a.erp_vin_id
+        LEFT JOIN erp_docker g ON g.id = a.erp_docker_id
+        LEFT JOIN erp_car_type ct ON ct.id = e.erp_car_type_id
+        LEFT JOIN erp_engine_type et ON et.id = e.erp_engine_type_id
+	</sql>
+    
+	<select id="get" resultType="ErpSendItems">
+		SELECT 
+			<include refid="erpSendItemsColumns"/>
+		FROM erp_send_items a
+		<include refid="erpSendItemsJoins"/>
+		WHERE a.id = #{id}
+	</select>
+	
+	<select id="findList" resultType="ErpSendItems">
+		SELECT 
+			<include refid="erpSendItemsColumns"/>
+		FROM erp_send_items a
+		<include refid="erpSendItemsJoins"/>
+		<where>
+			a.del_flag = #{DEL_FLAG_NORMAL}
+			<if test="enumSendItemsType != null and enumSendItemsType != ''">
+				AND a.enum_send_items_type = #{enumSendItemsType}
+			</if>
+            <if test="erpRepairOrder != null and erpRepairOrder.id != null and erpRepairOrder.id != ''">
+                AND a.erp_repair_order_id = #{erpRepairOrder.id}
+            </if>
+            <if test="erpPartsOrder != null and erpPartsOrder.id != null and erpPartsOrder.id != ''">
+                AND a.erp_parts_order_id = #{erpPartsOrder.id}
+            </if>
+		</where>
+		<choose>
+			<when test="page !=null and page.orderBy != null and page.orderBy != ''">
+				ORDER BY ${page.orderBy}
+			</when>
+			<otherwise>
+				ORDER BY a.update_date DESC
+			</otherwise>
+		</choose>
+	</select>
+	
+	<select id="findAllList" resultType="ErpSendItems">
+		SELECT 
+			<include refid="erpSendItemsColumns"/>
+		FROM erp_send_items a
+		<include refid="erpSendItemsJoins"/>
+		<where>
+			a.del_flag = #{DEL_FLAG_NORMAL}
+		</where>		
+		<choose>
+			<when test="page !=null and page.orderBy != null and page.orderBy != ''">
+				ORDER BY ${page.orderBy}
+			</when>
+			<otherwise>
+				ORDER BY a.update_date DESC
+			</otherwise>
+		</choose>
+	</select>
+
+
+    <insert id="insertSelective">
+        INSERT INTO erp_send_items
+        <trim prefix="(" suffix=")" suffixOverrides="," >
+                  <if test="id != null">
+                    id,
+                  </if>
+                  <if test="count != null">
+                    count,
+                  </if>
+                  <if test="enum_send_items_type != null">
+                    enum_send_items_type,
+                  </if>
+                  <if test="erp_express_id != null">
+                    erp_express_id,
+                  </if>
+                  <if test="erp_parts_order_id != null">
+                    erp_parts_order_id,
+                  </if>
+                  <if test="erp_repair_order_id != null">
+                    erp_repair_order_id,
+                  </if>
+                  <if test="erp_docker_id != null">
+                      erp_docker_id,
+                  </if>
+                  <if test="erp_car_parts_id != null">
+                    erp_car_parts_id,
+                  </if>
+                  <if test="erp_vin_id != null">
+                    erp_vin_id,
+                  </if>
+                  <if test="create_by != null">
+                    create_by,
+                  </if>
+                  <if test="create_date != null">
+                    create_date,
+                  </if>
+                  <if test="update_by != null">
+                    update_by,
+                  </if>
+                  <if test="update_date != null">
+                    update_date,
+                  </if>
+                  <if test="remarks != null">
+                    remarks,
+                  </if>
+                  <if test="del_flag != null">
+                    del_flag,
+                  </if>
+        </trim>
+        <trim prefix="VALUES (" suffix=")" suffixOverrides="," >
+                  <if test="id != null" >
+                    #{id},
+                  </if>
+                  <if test="count != null" >
+                    #{count},
+                  </if>
+                  <if test="enumSendItemsType != null" >
+                    #{enumSendItemsType},
+                  </if>
+                  <if test="erpExpress.id != null" >
+                    #{erpExpress.id},
+                  </if>
+                  <if test="erpPartsOrder.id != null" >
+                    #{erpPartsOrder.id},
+                  </if>
+                  <if test="erpRepairOrder.id != null" >
+                    #{erpRepairOrder.id},
+                  </if>
+                  <if test="erpShipments.id != null" >
+                    #{erpShipments.id},
+                  </if>
+                  <if test="erpCarParts.id != null" >
+                    #{erpCarParts.id},
+                  </if>
+                  <if test="erpVin.id != null" >
+                    #{erpVin.id},
+                  </if>
+                  <if test="createBy.id != null" >
+                    #{createBy.id},
+                  </if>
+                  <if test="createDate != null" >
+                    #{createDate},
+                  </if>
+                  <if test="updateBy.id != null" >
+                    #{updateBy.id},
+                  </if>
+                  <if test="updateDate != null" >
+                    #{updateDate},
+                  </if>
+                  <if test="remarks != null" >
+                    #{remarks},
+                  </if>
+                  <if test="delFlag != null" >
+                    #{delFlag},
+                  </if>
+        </trim>
+    </insert>
+
+     <update id="updateSelective">
+        UPDATE erp_send_items
+        <set>
+                          <if test="count != null" >
+                                    count = #{count},
+                          </if>
+                          <if test="enum_send_items_type != null" >
+                                    enum_send_items_type = #{enumSendItemsType},
+                          </if>
+                          <if test="erp_express_id != null" >
+                                    erp_express_id = #{erpExpress.id},
+                          </if>
+                          <if test="erp_parts_order_id != null" >
+                                    erp_parts_order_id = #{erpPartsOrder.id},
+                          </if>
+                          <if test="erp_repair_order_id != null" >
+                                    erp_repair_order_id = #{erpRepairOrder.id},
+                          </if>
+                          <if test="erp_docker_id != null" >
+                              erp_docker_id = #{erpDocker.id},
+                          </if>
+                          <if test="erp_car_parts_id != null" >
+                                    erp_car_parts_id = #{erpCarParts.id},
+                          </if>
+                          <if test="erp_vin_id != null" >
+                                    erp_vin_id = #{erpVin.id},
+                          </if>
+                          <if test="update_by != null" >
+                                    update_by = #{updateBy.id},
+                          </if>
+                          <if test="update_date != null" >
+                                    update_date = #{updateDate},
+                          </if>
+                          <if test="remarks != null" >
+                                    remarks = #{remarks},
+                          </if>
+        </set>
+        WHERE id = #{id}
+      </update>
+
+
+	<insert id="insert">
+		INSERT INTO erp_send_items(
+                        id,
+                count,
+                enum_send_items_type,
+                erp_express_id,
+                erp_parts_order_id,
+                erp_repair_order_id,
+                erp_docker_id,
+                erp_car_parts_id,
+                erp_vin_id,
+                create_by,
+                create_date,
+                update_by,
+                update_date,
+                remarks,
+                del_flag
+		) VALUES (
+                        #{id},
+                #{count},
+                #{enumSendItemsType},
+                #{erpExpress.id},
+                #{erpPartsOrder.id},
+                #{erpRepairOrder.id},
+                #{erpDocker.id},
+                #{erpCarParts.id},
+                #{erpVin.id},
+                #{createBy.id},
+                #{createDate},
+                #{updateBy.id},
+                #{updateDate},
+                #{remarks},
+                #{delFlag}
+		)
+	</insert>
+	
+	<update id="update">
+		UPDATE erp_send_items SET 	
+                        count = #{count},
+                enum_send_items_type = #{enumSendItemsType},
+                erp_express_id = #{erpExpress.id},
+                erp_parts_order_id = #{erpPartsOrder.id},
+                erp_repair_order_id = #{erpRepairOrder.id},
+                erp_docker_id = #{erpDocker.id},
+                erp_car_parts_id = #{erpCarParts.id},
+                erp_vin_id = #{erpVin.id},
+                update_by = #{updateBy.id},
+                update_date = #{updateDate},
+                remarks = #{remarks}
+		WHERE id = #{id}
+	</update>
+	
+	<update id="delete">
+		UPDATE erp_send_items SET 
+			del_flag = #{DEL_FLAG_DELETE}
+		WHERE id = #{id}
+	</update>
+
+	<!--  ======================================================================================== -->
+
+</mapper>

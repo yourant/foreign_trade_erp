@@ -1,0 +1,266 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+        <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+        <mapper namespace="com.fy.erp.modules.erp.dao.ErpPayMoneyDao">
+    
+	<sql id="erpPayMoneyColumns">
+        		a.id AS "id",
+		a.erp_pay_type_id AS "erpPayType.id",
+		a.payable_money AS "payableMoney",
+		a.come_money AS "comeMoney",
+		a.time AS "time",
+		a.scale AS "scale",
+		a.file AS "file",
+		a.create_by AS "createBy.id",
+		a.create_date AS "createDate",
+		a.update_by AS "updateBy.id",
+		a.update_date AS "updateDate",
+		a.remarks AS "remarks",
+		a.del_flag AS "delFlag"
+	</sql>
+	
+	<sql id="erpPayMoneyJoins">
+	</sql>
+    
+	<select id="get" resultType="ErpPayMoney">
+		SELECT 
+			<include refid="erpPayMoneyColumns"/>
+		FROM erp_pay_money a
+		<include refid="erpPayMoneyJoins"/>
+		WHERE a.id = #{id}
+	</select>
+	
+	<select id="findList" resultType="ErpPayMoney">
+		SELECT 
+			<include refid="erpPayMoneyColumns"/>
+		FROM erp_pay_money a
+		<include refid="erpPayMoneyJoins"/>
+		<where>
+			a.del_flag = #{DEL_FLAG_NORMAL}
+			<if test="erpPayType != null and erpPayType.id != null and erpPayType.id != ''">
+				AND a.erp_pay_type_id = #{erpPayType.id}
+			</if>
+			<if test="payableMoney != null and payableMoney != ''">
+				AND a.payable_money &gt;= #{payableMoney}
+			</if>
+			<if test="comeMoney != null and comeMoney != ''">
+				AND a.come_money &gt;= #{comeMoney}
+			</if>
+			<if test="time != null and time != ''">
+				AND a.time = #{time}
+			</if>
+            <if test="file != null and file != ''">
+                AND a.file = #{file}
+            </if>
+			<if test="scale != null and scale != ''">
+				AND a.scale &gt;= #{scale}
+			</if>
+			<if test="updateDate != null and updateDate != ''">
+				AND a.update_date = #{updateDate}
+			</if>
+			<if test="remarks != null and remarks != ''">
+				AND a.remarks LIKE 
+					<if test="dbName == 'oracle'">'%'||#{remarks}||'%'</if>
+					<if test="dbName == 'mssql'">'%'+#{remarks}+'%'</if>
+					<if test="dbName == 'mysql'">concat('%',#{remarks},'%')</if>
+			</if>
+			<if test="delFlag != null and delFlag != ''">
+				AND a.del_flag = #{delFlag}
+			</if>
+		</where>
+		<choose>
+			<when test="page !=null and page.orderBy != null and page.orderBy != ''">
+				ORDER BY ${page.orderBy}
+			</when>
+			<otherwise>
+				ORDER BY a.update_date DESC
+			</otherwise>
+		</choose>
+	</select>
+	
+	<select id="findAllList" resultType="ErpPayMoney">
+		SELECT 
+			<include refid="erpPayMoneyColumns"/>
+		FROM erp_pay_money a
+		<include refid="erpPayMoneyJoins"/>
+		<where>
+			a.del_flag = #{DEL_FLAG_NORMAL}
+		</where>		
+		<choose>
+			<when test="page !=null and page.orderBy != null and page.orderBy != ''">
+				ORDER BY ${page.orderBy}
+			</when>
+			<otherwise>
+				ORDER BY a.update_date DESC
+			</otherwise>
+		</choose>
+	</select>
+
+
+    <insert id="insertSelective">
+        INSERT INTO erp_pay_money
+        <trim prefix="(" suffix=")" suffixOverrides="," >
+                  <if test="id != null">
+                    id,
+                  </if>
+                  <if test="erp_pay_type_id != null">
+                    erp_pay_type_id,
+                  </if>
+                  <if test="payable_money != null">
+                    payable_money,
+                  </if>
+                  <if test="come_money != null">
+                    come_money,
+                  </if>
+                  <if test="time != null">
+                    time,
+                  </if>
+                  <if test="file != null">
+                    file,
+                  </if>
+                  <if test="scale != null">
+                    scale,
+                  </if>
+                  <if test="create_by != null">
+                    create_by,
+                  </if>
+                  <if test="create_date != null">
+                    create_date,
+                  </if>
+                  <if test="update_by != null">
+                    update_by,
+                  </if>
+                  <if test="update_date != null">
+                    update_date,
+                  </if>
+                  <if test="remarks != null">
+                    remarks,
+                  </if>
+                  <if test="del_flag != null">
+                    del_flag,
+                  </if>
+        </trim>
+        <trim prefix="VALUES (" suffix=")" suffixOverrides="," >
+                  <if test="id != null" >
+                    #{id},
+                  </if>
+                  <if test="erpPayType.id != null" >
+                    #{erpPayType.id},
+                  </if>
+                  <if test="payableMoney != null" >
+                    #{payableMoney},
+                  </if>
+                  <if test="comeMoney != null" >
+                    #{comeMoney},
+                  </if>
+                  <if test="time != null" >
+                    #{time},
+                  </if>
+                  <if test="file != null" >
+                    #{file},
+                  </if>
+                  <if test="scale != null" >
+                    #{scale},
+                  </if>
+                  <if test="createBy.id != null" >
+                    #{createBy.id},
+                  </if>
+                  <if test="createDate != null" >
+                    #{createDate},
+                  </if>
+                  <if test="updateBy.id != null" >
+                    #{updateBy.id},
+                  </if>
+                  <if test="updateDate != null" >
+                    #{updateDate},
+                  </if>
+                  <if test="remarks != null" >
+                    #{remarks},
+                  </if>
+                  <if test="delFlag != null" >
+                    #{delFlag},
+                  </if>
+        </trim>
+    </insert>
+
+     <update id="updateSelective">
+        UPDATE erp_pay_money
+        <set>
+                          <if test="erp_pay_type_id != null" >
+                                    erp_pay_type_id = #{erpPayType.id},
+                          </if>
+                          <if test="payable_money != null" >
+                                    payable_money = #{payableMoney},
+                          </if>
+                          <if test="come_money != null" >
+                                    come_money = #{comeMoney},
+                          </if>
+                          <if test="time != null" >
+                                    time = #{time},
+                          </if>
+                          <if test="file != null" >
+                                    file = #{file},
+                          </if>
+                          <if test="scale != null" >
+                                    scale = #{scale},
+                          </if>
+                          <if test="remarks != null" >
+                                    remarks = #{remarks},
+                          </if>
+        </set>
+        WHERE id = #{id}
+      </update>
+
+
+	<insert id="insert">
+		INSERT INTO erp_pay_money(
+                        id,
+                erp_pay_type_id,
+                payable_money,
+                come_money,
+                time,
+                file,
+                scale,
+                create_by,
+                create_date,
+                update_by,
+                update_date,
+                remarks,
+                del_flag
+		) VALUES (
+                        #{id},
+                #{erpPayType.id},
+                #{payableMoney},
+                #{comeMoney},
+                #{time},
+                #{file},
+                #{scale},
+                #{createBy.id},
+                #{createDate},
+                #{updateBy.id},
+                #{updateDate},
+                #{remarks},
+                #{delFlag}
+		)
+	</insert>
+	
+	<update id="update">
+		UPDATE erp_pay_money SET 	
+                        erp_pay_type_id = #{erpPayType.id},
+                payable_money = #{payableMoney},
+                come_money = #{comeMoney},
+                time = #{time},
+                file = #{file},
+                scale = #{scale},
+                remarks = #{remarks}
+		WHERE id = #{id}
+	</update>
+	
+	<update id="delete">
+		UPDATE erp_pay_money SET 
+			del_flag = #{DEL_FLAG_DELETE}
+		WHERE id = #{id}
+	</update>
+
+	<!--  ======================================================================================== -->
+
+</mapper>

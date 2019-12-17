@@ -1,0 +1,236 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+        <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+        <mapper namespace="com.fy.erp.modules.erp.dao.SysCountryDao">
+    
+	<sql id="sysCountryColumns">
+        		a.id AS "id",
+		a.aname AS "aname",
+		a.zh_name AS "zhName",
+		a.code AS "code",
+		a.create_by AS "createBy.id",
+		a.create_date AS "createDate",
+		a.update_by AS "updateBy.id",
+		a.update_date AS "updateDate",
+		a.remarks AS "remarks",
+		a.del_flag AS "delFlag"
+	</sql>
+	
+	<sql id="sysCountryJoins">
+		LEFT JOIN sys_user u5 ON u5.id = a.create_by
+		LEFT JOIN sys_user u7 ON u7.id = a.update_by
+	</sql>
+    
+	<select id="get" resultType="SysCountry">
+		SELECT 
+			<include refid="sysCountryColumns"/>
+		FROM sys_country a
+		<include refid="sysCountryJoins"/>
+		WHERE a.id = #{id}
+	</select>
+	
+	<select id="findList" resultType="SysCountry">
+		SELECT 
+			<include refid="sysCountryColumns"/>
+		FROM sys_country a
+		<include refid="sysCountryJoins"/>
+		<where>
+			<if test="aname != null and aname != ''">
+				AND a.aname LIKE 
+					<if test="dbName == 'oracle'">'%'||#{aname}||'%'</if>
+					<if test="dbName == 'mssql'">'%'+#{aname}+'%'</if>
+					<if test="dbName == 'mysql'">concat('%',#{aname},'%')</if>
+			</if>
+			<if test="zhName != null and zhName != ''">
+				AND a.zh_name LIKE 
+					<if test="dbName == 'oracle'">'%'||#{zhName}||'%'</if>
+					<if test="dbName == 'mssql'">'%'+#{zhName}+'%'</if>
+					<if test="dbName == 'mysql'">concat('%',#{zhName},'%')</if>
+			</if>
+			<if test="code != null and code != ''">
+				AND a.code LIKE 
+					<if test="dbName == 'oracle'">'%'||#{code}||'%'</if>
+					<if test="dbName == 'mssql'">'%'+#{code}+'%'</if>
+					<if test="dbName == 'mysql'">concat('%',#{code},'%')</if>
+			</if>
+			<if test="updateDate != null and updateDate != ''">
+				AND a.update_date = #{updateDate}
+			</if>
+			<if test="remarks != null and remarks != ''">
+				AND a.remarks LIKE 
+					<if test="dbName == 'oracle'">'%'||#{remarks}||'%'</if>
+					<if test="dbName == 'mssql'">'%'+#{remarks}+'%'</if>
+					<if test="dbName == 'mysql'">concat('%',#{remarks},'%')</if>
+			</if>
+			<if test="delFlag != null and delFlag != ''">
+				AND a.del_flag = #{delFlag}
+			</if>
+		</where>
+		<choose>
+			<when test="page !=null and page.orderBy != null and page.orderBy != ''">
+				ORDER BY ${page.orderBy}
+			</when>
+			<otherwise>
+				ORDER BY a.update_date DESC
+			</otherwise>
+		</choose>
+	</select>
+	
+	<select id="findAllList" resultType="SysCountry">
+		SELECT 
+			<include refid="sysCountryColumns"/>
+		FROM sys_country a
+		<include refid="sysCountryJoins"/>
+		<where>
+			a.del_flag = #{DEL_FLAG_NORMAL}
+		</where>		
+		<choose>
+			<when test="page !=null and page.orderBy != null and page.orderBy != ''">
+				ORDER BY ${page.orderBy}
+			</when>
+			<otherwise>
+				ORDER BY a.update_date DESC
+			</otherwise>
+		</choose>
+	</select>
+
+
+    <insert id="insertSelective">
+        INSERT INTO sys_country
+        <trim prefix="(" suffix=")" suffixOverrides="," >
+                  <if test="id != null">
+                    id,
+                  </if>
+                  <if test="aname != null">
+                    aname,
+                  </if>
+                  <if test="zh_name != null">
+                    zh_name,
+                  </if>
+                  <if test="code != null">
+                    code,
+                  </if>
+                  <if test="create_by != null">
+                    create_by,
+                  </if>
+                  <if test="create_date != null">
+                    create_date,
+                  </if>
+                  <if test="update_by != null">
+                    update_by,
+                  </if>
+                  <if test="update_date != null">
+                    update_date,
+                  </if>
+                  <if test="remarks != null">
+                    remarks,
+                  </if>
+                  <if test="del_flag != null">
+                    del_flag,
+                  </if>
+        </trim>
+        <trim prefix="VALUES (" suffix=")" suffixOverrides="," >
+                  <if test="id != null" >
+                    #{id},
+                  </if>
+                  <if test="aname != null" >
+                    #{aname},
+                  </if>
+                  <if test="zhName != null" >
+                    #{zhName},
+                  </if>
+                  <if test="code != null" >
+                    #{code},
+                  </if>
+                  <if test="createBy.id != null" >
+                    #{createBy.id},
+                  </if>
+                  <if test="createDate != null" >
+                    #{createDate},
+                  </if>
+                  <if test="updateBy.id != null" >
+                    #{updateBy.id},
+                  </if>
+                  <if test="updateDate != null" >
+                    #{updateDate},
+                  </if>
+                  <if test="remarks != null" >
+                    #{remarks},
+                  </if>
+                  <if test="delFlag != null" >
+                    #{delFlag},
+                  </if>
+        </trim>
+    </insert>
+
+     <update id="updateSelective">
+        UPDATE sys_country
+        <set>
+                          <if test="aname != null" >
+                                    aname = #{aname},
+                          </if>
+                          <if test="zh_name != null" >
+                                    zh_name = #{zhName},
+                          </if>
+                          <if test="code != null" >
+                                    code = #{code},
+                          </if>
+                          <if test="update_by != null" >
+                                    update_by = #{updateBy.id},
+                          </if>
+                          <if test="update_date != null" >
+                                    update_date = #{updateDate},
+                          </if>
+                          <if test="remarks != null" >
+                                    remarks = #{remarks},
+                          </if>
+        </set>
+        WHERE id = #{id}
+      </update>
+
+
+	<insert id="insert">
+		INSERT INTO sys_country(
+                        id,
+                aname,
+                zh_name,
+                code,
+                create_by,
+                create_date,
+                update_by,
+                update_date,
+                remarks,
+                del_flag
+		) VALUES (
+                        #{id},
+                #{aname},
+                #{zhName},
+                #{code},
+                #{createBy.id},
+                #{createDate},
+                #{updateBy.id},
+                #{updateDate},
+                #{remarks},
+                #{delFlag}
+		)
+	</insert>
+	
+	<update id="update">
+		UPDATE sys_country SET 	
+                        aname = #{aname},
+                zh_name = #{zhName},
+                code = #{code},
+                update_by = #{updateBy.id},
+                update_date = #{updateDate},
+                remarks = #{remarks}
+		WHERE id = #{id}
+	</update>
+	
+	<update id="delete">
+		UPDATE sys_country SET 
+			del_flag = #{DEL_FLAG_DELETE}
+		WHERE id = #{id}
+	</update>
+
+	<!--  ======================================================================================== -->
+
+</mapper>

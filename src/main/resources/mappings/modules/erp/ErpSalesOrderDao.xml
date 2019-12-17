@@ -1,0 +1,395 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+        <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+        <mapper namespace="com.fy.erp.modules.erp.dao.ErpSalesOrderDao">
+    
+	<sql id="erpSalesOrderColumns">
+        		a.id AS "id",
+        a.proc_ins_id AS "act.procInsId",
+		a.erp_customer_id AS "erpCustomer.id",
+        ec.company AS "erpCustomer.company",
+		a.id_sys_user AS "user.id",
+		a.enmu_trading_type AS "enmuTradingType",
+		a.pi_no AS "piNo",
+        a.pi_file AS "piFile",
+		a.production_plain AS "productionPlain",
+		a.order_time AS "orderTime",
+		a.commission AS "commission",
+		a.commission_month AS "commissionMonth",
+		a.status AS "status",
+		a.create_by AS "createBy.id",
+		a.create_date AS "createDate",
+		a.update_by AS "updateBy.id",
+		a.update_date AS "updateDate",
+		a.remarks AS "remarks",
+		a.del_flag AS "delFlag",
+        a.money_pass AS "moneyPass",
+        ec.aname AS "erpCustomer.aname",
+		u3.name AS "user.name",
+        MAX(ept.sum_price) AS "sumPayableMoney",
+        SUM(epm.come_money) AS "sumComeMoney",
+        max( ept.sum_price) - SUM( epm.come_money )AS "arrearage"
+	</sql>
+	
+	<sql id="erpSalesOrderJoins">
+		LEFT JOIN sys_user u3 ON u3.id = a.id_sys_user
+        LEFT JOIN sys_office o3 ON o3.id = u3.office_id
+		LEFT JOIN sys_user u11 ON u11.id = a.create_by
+		LEFT JOIN sys_user u13 ON u13.id = a.update_by
+        LEFT JOIN erp_customer ec ON ec.id = a.erp_customer_id
+        LEFT JOIN erp_pay_type ept ON ept.erp_sales_order_id= a.id
+        LEFT JOIN erp_pay_money epm ON epm.erp_pay_type_id = ept.id
+	</sql>
+
+    <sql id="erpSalesOrderGroup">
+        GROUP BY
+        a.id,
+        a.erp_customer_id,
+        a.id_sys_user,
+        a.enmu_trading_type,
+        a.pi_no,
+        a.pi_file,
+        a.production_plain,
+        a.order_time,
+        a.commission,
+        a.commission_month,
+        a. STATUS,
+        a.create_by,
+        a.create_date,
+        a.update_by,
+        a.update_date,
+        a.remarks,
+        a.del_flag,
+        a.money_pass,
+        ec.aname
+    </sql>
+    
+	<select id="get" resultType="ErpSalesOrder">
+		SELECT 
+			<include refid="erpSalesOrderColumns"/>
+		FROM erp_sales_order a
+		<include refid="erpSalesOrderJoins"/>
+		WHERE a.id = #{id}
+	</select>
+	
+	<select id="findList" resultType="ErpSalesOrder">
+		SELECT 
+			<include refid="erpSalesOrderColumns"/>
+		FROM erp_sales_order a
+		<include refid="erpSalesOrderJoins"/>
+        <if test="sqlMap.assignee != null and sqlMap.assignee != ''">
+            LEFT JOIN ACT_HI_PROCINST ahp ON ahp.BUSINESS_KEY_ = a.id
+            LEFT JOIN ACT_HI_TASKINST aht ON	ahp.PROC_INST_ID_ = aht.PROC_INST_ID_
+        </if>
+		<where>
+			a.del_flag = #{DEL_FLAG_NORMAL}
+			<if test="erpCustomer != null and erpCustomer.id != null and erpCustomer.id != ''">
+				AND a.erp_customer_id = #{erpCustomer.id}
+			</if>
+			<if test="user != null and user.id != null and user.id != ''">
+				AND a.id_sys_user = #{user.id}
+			</if>
+			<if test="enmuTradingType != null and enmuTradingType != ''">
+				AND a.enmu_trading_type = #{enmuTradingType}
+			</if>
+			<if test="piNo != null and piNo != ''">
+				AND a.pi_no LIKE 
+					<if test="dbName == 'oracle'">'%'||#{piNo}||'%'</if>
+					<if test="dbName == 'mssql'">'%'+#{piNo}+'%'</if>
+					<if test="dbName == 'mysql'">concat('%',#{piNo},'%')</if>
+			</if>
+			<if test="productionPlain != null and productionPlain != ''">
+				AND a.production_plain LIKE 
+					<if test="dbName == 'oracle'">'%'||#{productionPlain}||'%'</if>
+					<if test="dbName == 'mssql'">'%'+#{productionPlain}+'%'</if>
+					<if test="dbName == 'mysql'">concat('%',#{productionPlain},'%')</if>
+			</if>
+			<if test="orderTime != null and orderTime != ''">
+				AND a.order_time = #{orderTime}
+			</if>
+			<if test="commission != null and commission != ''">
+				AND a.commission &gt;= #{commission}
+			</if>
+			<if test="commissionMonth != null and commissionMonth != ''">
+				AND a.commission_month = #{commissionMonth}
+			</if>
+			<if test="status != null and status != ''">
+				AND a.status = #{status}
+			</if>
+			<if test="updateDate != null and updateDate != ''">
+				AND a.update_date = #{updateDate}
+			</if>
+			<if test="remarks != null and remarks != ''">
+				AND a.remarks LIKE 
+					<if test="dbName == 'oracle'">'%'||#{remarks}||'%'</if>
+					<if test="dbName == 'mssql'">'%'+#{remarks}+'%'</if>
+					<if test="dbName == 'mysql'">concat('%',#{remarks},'%')</if>
+			</if>
+			<if test="delFlag != null and delFlag != ''">
+				AND a.del_flag = #{delFlag}
+			</if>
+            <if test="sqlMap.assignee != null and sqlMap.assignee != ''">
+                AND aht.ASSIGNEE_ = #{sqlMap.assignee}
+            </if>
+		</where>
+        <!-- 数据范围过滤 -->
+        ${sqlMap.dsf}
+        <include refid="erpSalesOrderGroup"/>
+		<choose>
+			<when test="page !=null and page.orderBy != null and page.orderBy != ''">
+				ORDER BY ${page.orderBy}
+			</when>
+			<otherwise>
+				ORDER BY a.update_date DESC
+			</otherwise>
+		</choose>
+
+	</select>
+	
+	<select id="findAllList" resultType="ErpSalesOrder">
+		SELECT 
+			<include refid="erpSalesOrderColumns"/>
+		FROM erp_sales_order a
+		<include refid="erpSalesOrderJoins"/>
+		<where>
+			a.del_flag = #{DEL_FLAG_NORMAL}
+		</where>
+        <include refid="erpSalesOrderGroup"/>
+		<choose>
+			<when test="page !=null and page.orderBy != null and page.orderBy != ''">
+				ORDER BY ${page.orderBy}
+			</when>
+			<otherwise>
+				ORDER BY a.update_date DESC
+			</otherwise>
+		</choose>
+	</select>
+
+
+    <insert id="insertSelective">
+        INSERT INTO erp_sales_order
+        <trim prefix="(" suffix=")" suffixOverrides="," >
+                  <if test="id != null">
+                    id,
+                  </if>
+                  <if test="erp_customer_id != null">
+                    erp_customer_id,
+                  </if>
+                  <if test="id_sys_user != null">
+                    id_sys_user,
+                  </if>
+                  <if test="enmu_trading_type != null">
+                    enmu_trading_type,
+                  </if>
+                  <if test="pi_no != null">
+                    pi_no,
+                  </if>
+                  <if test="pi_file != null">
+                    pi_file,
+                  </if>
+                  <if test="production_plain != null">
+                    production_plain,
+                  </if>
+                  <if test="order_time != null">
+                    order_time,
+                  </if>
+                  <if test="commission != null">
+                    commission,
+                  </if>
+                  <if test="commission_month != null">
+                    commission_month,
+                  </if>
+                  <if test="status != null">
+                    status,
+                  </if>
+                  <if test="create_by != null">
+                    create_by,
+                  </if>
+                  <if test="create_date != null">
+                    create_date,
+                  </if>
+                  <if test="update_by != null">
+                    update_by,
+                  </if>
+                  <if test="update_date != null">
+                    update_date,
+                  </if>
+                  <if test="remarks != null">
+                    remarks,
+                  </if>
+                  <if test="del_flag != null">
+                    del_flag,
+                  </if>
+                  <if test="money_pass != null">
+                      money_pass,
+                  </if>
+        </trim>
+        <trim prefix="VALUES (" suffix=")" suffixOverrides="," >
+                  <if test="id != null" >
+                    #{id},
+                  </if>
+                  <if test="erpCustomer.id != null" >
+                    #{erpCustomer.id},
+                  </if>
+                  <if test="user.id != null" >
+                    #{user.id},
+                  </if>
+                  <if test="enmuTradingType != null" >
+                    #{enmuTradingType},
+                  </if>
+                  <if test="piNo != null" >
+                    #{piNo},
+                  </if>
+                  <if test="piFile != null">
+                    #{piFile},
+                  </if>
+                  <if test="productionPlain != null" >
+                    #{productionPlain},
+                  </if>
+                  <if test="orderTime != null" >
+                    #{orderTime},
+                  </if>
+                  <if test="commission != null" >
+                    #{commission},
+                  </if>
+                  <if test="commissionMonth != null" >
+                    #{commissionMonth},
+                  </if>
+                  <if test="status != null" >
+                    #{status},
+                  </if>
+                  <if test="createBy.id != null" >
+                    #{createBy.id},
+                  </if>
+                  <if test="createDate != null" >
+                    #{createDate},
+                  </if>
+                  <if test="updateBy.id != null" >
+                    #{updateBy.id},
+                  </if>
+                  <if test="updateDate != null" >
+                    #{updateDate},
+                  </if>
+                  <if test="remarks != null" >
+                    #{remarks},
+                  </if>
+                  <if test="delFlag != null" >
+                    #{delFlag},
+                  </if>
+                  <if test="moneyPass != null">
+                      #{moneyPass},
+                  </if>
+        </trim>
+    </insert>
+
+     <update id="updateSelective">
+        UPDATE erp_sales_order
+        <set>
+                          <if test="erp_customer_id != null" >
+                                    erp_customer_id = #{erpCustomer.id},
+                          </if>
+                          <if test="id_sys_user != null" >
+                                    id_sys_user = #{user.id},
+                          </if>
+                          <if test="enmu_trading_type != null" >
+                                    enmu_trading_type = #{enmuTradingType},
+                          </if>
+                          <if test="pi_no != null" >
+                                    pi_no = #{piNo},
+                          </if>
+                          <if test="pi_file != null">
+                                    pi_file = #{piFile},
+                          </if>
+                          <if test="production_plain != null" >
+                                    production_plain = #{productionPlain},
+                          </if>
+                          <if test="order_time != null" >
+                                    order_time = #{orderTime},
+                          </if>
+                          <if test="commission != null" >
+                                    commission = #{commission},
+                          </if>
+                          <if test="commission_month != null" >
+                                    commission_month = #{commissionMonth},
+                          </if>
+                          <if test="status != null" >
+                                    status = #{status},
+                          </if>
+                          <if test="remarks != null" >
+                                    remarks = #{remarks},
+                          </if>
+                          <if test="moneyPass != null" >
+                                    money_pass = #{moneyPass},
+                          </if>
+        </set>
+        WHERE id = #{id}
+      </update>
+
+
+	<insert id="insert">
+		INSERT INTO erp_sales_order(
+                        id,
+                erp_customer_id,
+                id_sys_user,
+                enmu_trading_type,
+                pi_no,
+                pi_file,
+                production_plain,
+                order_time,
+                commission,
+                commission_month,
+                status,
+                create_by,
+                create_date,
+                update_by,
+                update_date,
+                remarks,
+                del_flag,
+                money_pass
+		) VALUES (
+                        #{id},
+                #{erpCustomer.id},
+                #{user.id},
+                #{enmuTradingType},
+                #{piNo},
+                #{piFile},
+                #{productionPlain},
+                #{orderTime},
+                #{commission},
+                #{commissionMonth},
+                #{status},
+                #{createBy.id},
+                #{createDate},
+                #{updateBy.id},
+                #{updateDate},
+                #{remarks},
+                #{delFlag},
+                #{moneyPass}
+		)
+	</insert>
+	
+	<update id="update">
+		UPDATE erp_sales_order SET 	
+                        erp_customer_id = #{erpCustomer.id},
+                id_sys_user = #{user.id},
+                enmu_trading_type = #{enmuTradingType},
+                pi_no = #{piNo},
+                pi_file = #{piFile},
+                production_plain = #{productionPlain},
+                order_time = #{orderTime},
+                commission = #{commission},
+                commission_month = #{commissionMonth},
+                status = #{status},
+                remarks = #{remarks},
+                money_pass = #{moneyPass}
+		WHERE id = #{id}
+	</update>
+	
+	<update id="delete">
+		UPDATE erp_sales_order SET 
+			del_flag = #{DEL_FLAG_DELETE}
+		WHERE id = #{id}
+	</update>
+
+	<!--  ======================================================================================== -->
+
+</mapper>

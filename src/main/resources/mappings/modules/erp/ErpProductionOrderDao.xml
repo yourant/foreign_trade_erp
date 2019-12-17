@@ -1,0 +1,239 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+        <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+        <mapper namespace="com.fy.erp.modules.erp.dao.ErpProductionOrderDao">
+    
+	<sql id="erpProductionOrderColumns">
+        		a.id AS "id",
+		a.erp_sales_order_id AS "erpSalesOrder.id",
+		a.enmu_provider AS "enmuProvider",
+		a.content AS "content",
+		a.order_time AS "orderTime",
+		a.create_by AS "createBy.id",
+		a.create_date AS "createDate",
+		a.update_by AS "updateBy.id",
+		a.update_date AS "updateDate",
+		a.remarks AS "remarks",
+		a.del_flag AS "delFlag"
+	</sql>
+	
+	<sql id="erpProductionOrderJoins">
+		LEFT JOIN sys_user u6 ON u6.id = a.create_by
+		LEFT JOIN sys_user u8 ON u8.id = a.update_by
+	</sql>
+    
+	<select id="get" resultType="ErpProductionOrder">
+		SELECT 
+			<include refid="erpProductionOrderColumns"/>
+		FROM erp_production_order a
+		<include refid="erpProductionOrderJoins"/>
+		WHERE a.id = #{id}
+	</select>
+	
+	<select id="findList" resultType="ErpProductionOrder">
+		SELECT 
+			<include refid="erpProductionOrderColumns"/>
+		FROM erp_production_order a
+		<include refid="erpProductionOrderJoins"/>
+		<where>
+			a.del_flag = #{DEL_FLAG_NORMAL}
+			<if test="erpSalesOrder != null and erpSalesOrder.id != null and erpSalesOrder.id != ''">
+				AND a.erp_sales_order_id = #{erpSalesOrder.id}
+			</if>
+			<if test="enmuProvider != null and enmuProvider != ''">
+				AND a.enmu_provider = #{enmuProvider}
+			</if>
+			<if test="content != null and content != ''">
+				AND a.content LIKE 
+					<if test="dbName == 'oracle'">'%'||#{content}||'%'</if>
+					<if test="dbName == 'mssql'">'%'+#{content}+'%'</if>
+					<if test="dbName == 'mysql'">concat('%',#{content},'%')</if>
+			</if>
+			<if test="orderTime != null and orderTime != ''">
+				AND a.order_time = #{orderTime}
+			</if>
+			<if test="updateDate != null and updateDate != ''">
+				AND a.update_date = #{updateDate}
+			</if>
+			<if test="remarks != null and remarks != ''">
+				AND a.remarks LIKE 
+					<if test="dbName == 'oracle'">'%'||#{remarks}||'%'</if>
+					<if test="dbName == 'mssql'">'%'+#{remarks}+'%'</if>
+					<if test="dbName == 'mysql'">concat('%',#{remarks},'%')</if>
+			</if>
+			<if test="delFlag != null and delFlag != ''">
+				AND a.del_flag = #{delFlag}
+			</if>
+		</where>
+		<choose>
+			<when test="page !=null and page.orderBy != null and page.orderBy != ''">
+				ORDER BY ${page.orderBy}
+			</when>
+			<otherwise>
+				ORDER BY a.update_date DESC
+			</otherwise>
+		</choose>
+	</select>
+	
+	<select id="findAllList" resultType="ErpProductionOrder">
+		SELECT 
+			<include refid="erpProductionOrderColumns"/>
+		FROM erp_production_order a
+		<include refid="erpProductionOrderJoins"/>
+		<where>
+			a.del_flag = #{DEL_FLAG_NORMAL}
+		</where>		
+		<choose>
+			<when test="page !=null and page.orderBy != null and page.orderBy != ''">
+				ORDER BY ${page.orderBy}
+			</when>
+			<otherwise>
+				ORDER BY a.update_date DESC
+			</otherwise>
+		</choose>
+	</select>
+
+
+    <insert id="insertSelective">
+        INSERT INTO erp_production_order
+        <trim prefix="(" suffix=")" suffixOverrides="," >
+                  <if test="id != null">
+                    id,
+                  </if>
+                  <if test="erp_sales_order_id != null">
+                    erp_sales_order_id,
+                  </if>
+                  <if test="enmu_provider != null">
+                    enmu_provider,
+                  </if>
+                  <if test="content != null">
+                    content,
+                  </if>
+                  <if test="order_time != null">
+                    order_time,
+                  </if>
+                  <if test="create_by != null">
+                    create_by,
+                  </if>
+                  <if test="create_date != null">
+                    create_date,
+                  </if>
+                  <if test="update_by != null">
+                    update_by,
+                  </if>
+                  <if test="update_date != null">
+                    update_date,
+                  </if>
+                  <if test="remarks != null">
+                    remarks,
+                  </if>
+                  <if test="del_flag != null">
+                    del_flag,
+                  </if>
+        </trim>
+        <trim prefix="VALUES (" suffix=")" suffixOverrides="," >
+                  <if test="id != null" >
+                    #{id},
+                  </if>
+                  <if test="erpSalesOrder.id != null" >
+                    #{erpSalesOrder.id},
+                  </if>
+                  <if test="enmuProvider != null" >
+                    #{enmuProvider},
+                  </if>
+                  <if test="content != null" >
+                    #{content},
+                  </if>
+                  <if test="orderTime != null" >
+                    #{orderTime},
+                  </if>
+                  <if test="createBy.id != null" >
+                    #{createBy.id},
+                  </if>
+                  <if test="createDate != null" >
+                    #{createDate},
+                  </if>
+                  <if test="updateBy.id != null" >
+                    #{updateBy.id},
+                  </if>
+                  <if test="updateDate != null" >
+                    #{updateDate},
+                  </if>
+                  <if test="remarks != null" >
+                    #{remarks},
+                  </if>
+                  <if test="delFlag != null" >
+                    #{delFlag},
+                  </if>
+        </trim>
+    </insert>
+
+     <update id="updateSelective">
+        UPDATE erp_production_order
+        <set>
+                          <if test="erp_sales_order_id != null" >
+                                    erp_sales_order_id = #{erpSalesOrder.id},
+                          </if>
+                          <if test="enmu_provider != null" >
+                                    enmu_provider = #{enmuProvider},
+                          </if>
+                          <if test="content != null" >
+                                    content = #{content},
+                          </if>
+                          <if test="order_time != null" >
+                                    order_time = #{orderTime},
+                          </if>
+                          <if test="remarks != null" >
+                                    remarks = #{remarks},
+                          </if>
+        </set>
+        WHERE id = #{id}
+      </update>
+
+
+	<insert id="insert">
+		INSERT INTO erp_production_order(
+                        id,
+                erp_sales_order_id,
+                enmu_provider,
+                content,
+                order_time,
+                create_by,
+                create_date,
+                update_by,
+                update_date,
+                remarks,
+                del_flag
+		) VALUES (
+                        #{id},
+                #{erpSalesOrder.id},
+                #{enmuProvider},
+                #{content},
+                #{orderTime},
+                #{createBy.id},
+                #{createDate},
+                #{updateBy.id},
+                #{updateDate},
+                #{remarks},
+                #{delFlag}
+		)
+	</insert>
+	
+	<update id="update">
+		UPDATE erp_production_order SET 	
+                        erp_sales_order_id = #{erpSalesOrder.id},
+                enmu_provider = #{enmuProvider},
+                content = #{content},
+                order_time = #{orderTime},
+                remarks = #{remarks}
+		WHERE id = #{id}
+	</update>
+	
+	<update id="delete">
+		UPDATE erp_production_order SET 
+			del_flag = #{DEL_FLAG_DELETE}
+		WHERE id = #{id}
+	</update>
+
+	<!--  ======================================================================================== -->
+
+</mapper>
